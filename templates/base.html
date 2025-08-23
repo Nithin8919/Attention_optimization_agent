@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title or 'Attention Optimization AI' }}</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <i class="fas fa-eye"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Attention Optimization AI</h1>
+          <span class="brand-subtitle">Professional CRO & UX Analysis</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Ready</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Quick Setup</h4>
+        <div class="setup-steps">
+          <div class="setup-step">
+            <i class="fas fa-key"></i>
+            <span>Set <code>OPENAI_API_KEY</code></span>
+          </div>
+          <div class="setup-step">
+            <i class="fas fa-browser"></i>
+            <span>Install Playwright: <code>python -m playwright install chromium</code></span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Features</h4>
+        <ul>
+          <li><i class="fas fa-camera"></i> URL Screenshots</li>
+          <li><i class="fas fa-brain"></i> AI Analysis</li>
+          <li><i class="fas fa-chart-line"></i> Saliency Maps</li>
+          <li><i class="fas fa-lightbulb"></i> Optimization Tips</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 Attention Optimization AI • Built with FastAPI & HTMX</p>
+    </div>
+  </footer>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <div class="spinner-ring"></div>
+      </div>
+      <h3>Analyzing with AI...</h3>
+      <p>Processing your landing page for attention optimization insights</p>
+    </div>
+  </div>
+
+  <script>
+    // Loading overlay management
+    document.body.addEventListener('htmx:beforeRequest', function(evt) {
+      document.getElementById('loading-overlay').classList.remove('hidden');
+    });
+    
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    });
+  </script>
+</body>
+</html>

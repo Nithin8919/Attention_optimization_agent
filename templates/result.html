@@ -1,0 +1,297 @@
+<div class="results-container">
+  <!-- Success Header -->
+  <div class="results-header">
+    <div class="success-indicator">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="success-text">
+        <h2>Analysis Complete!</h2>
+        <p>Your landing page has been analyzed with AI-powered attention optimization insights</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Grid -->
+  <div class="results-grid">
+    
+    <!-- Annotated Image -->
+    <div class="result-card image-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-image"></i>
+        </div>
+        <div class="card-title">
+          <h3>Annotated Analysis</h3>
+          <p>AI-generated attention map with CTA highlights</p>
+        </div>
+        <div class="card-actions">
+          <a href="/download/png/{{ run_id }}" class="btn-secondary">
+            <i class="fas fa-download"></i>
+            <span>Download PNG</span>
+          </a>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="image-container">
+          <img src="/outputs/{{ run_id }}.png" alt="Annotated Analysis" class="result-image">
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="result-card metrics-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="card-title">
+          <h3>Key Metrics</h3>
+          <p>Performance indicators and confidence scores</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">CTAs Found</span>
+              <span class="metric-value">{{ metrics.num_ctas or 0 }}</span>
+            </div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">People Detected</span>
+              <span class="metric-value">{{ metrics.num_people or 0 }}</span>
+            </div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">AI Confidence</span>
+              <span class="metric-value">
+                {% if metrics.confidence is not none %}
+                  {{ "%.1f"|format(metrics.confidence * 100) }}%
+                {% else %}
+                  N/A
+                {% endif %}
+              </span>
+            </div>
+          </div>
+          
+          {% if metrics.avg_cta_saliency %}
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-eye"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">Avg CTA Saliency</span>
+              <span class="metric-value">{{ "%.2f"|format(metrics.avg_cta_saliency) }}</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Optimization Suggestions -->
+    <div class="result-card suggestions-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-lightbulb"></i>
+        </div>
+        <div class="card-title">
+          <h3>Optimization Suggestions</h3>
+          <p>AI-recommended improvements for better attention capture</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="suggestions-list">
+          {% if report.prioritized_suggestions %}
+            {% for suggestion in report.prioritized_suggestions %}
+            <div class="suggestion-item">
+              <div class="suggestion-icon">
+                <i class="fas fa-arrow-up"></i>
+              </div>
+              <div class="suggestion-text">
+                {{ suggestion }}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="no-suggestions">
+              <p>No specific suggestions available from the AI analysis.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Analysis -->
+    {% if report.ctas %}
+    <div class="result-card cta-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-hand-pointer"></i>
+        </div>
+        <div class="card-title">
+          <h3>Call-to-Action Analysis</h3>
+          <p>Detailed breakdown of each CTA's performance</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="cta-list">
+          {% for cta in report.ctas %}
+          <div class="cta-item">
+            <div class="cta-header">
+              <div class="cta-priority priority-{{ cta.priority }}">
+                <span class="priority-label">Priority {{ cta.priority }}</span>
+              </div>
+              <div class="cta-text">{{ cta.text[:50] }}{% if cta.text|length > 50 %}...{% endif %}</div>
+            </div>
+            
+            <div class="cta-metrics">
+              <div class="cta-metric">
+                <span class="metric-label">Saliency</span>
+                <span class="metric-value">
+                  {% if cta.estimates and cta.estimates.saliency is not none %}
+                    {{ "%.2f"|format(cta.estimates.saliency) }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </span>
+              </div>
+              {% if cta.estimates and cta.estimates.contrast %}
+              <div class="cta-metric">
+                <span class="metric-label">Contrast</span>
+                <span class="metric-value">{{ "%.1f"|format(cta.estimates.contrast) }}</span>
+              </div>
+              {% endif %}
+              {% if cta.estimates and cta.estimates.thirds_score %}
+              <div class="cta-metric">
+                <span class="metric-label">Composition</span>
+                <span class="metric-value">{{ "%.2f"|format(cta.estimates.thirds_score) }}</span>
+              </div>
+              {% endif %}
+            </div>
+            
+            {% if cta.issues %}
+            <div class="cta-issues">
+              <span class="issues-label">Issues:</span>
+              {% for issue in cta.issues %}
+              <span class="issue-tag">{{ issue }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- A/B Test Ideas -->
+    {% if report.ab_tests %}
+    <div class="result-card ab-tests-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-flask"></i>
+        </div>
+        <div class="card-title">
+          <h3>A/B Test Ideas</h3>
+          <p>Data-driven hypotheses for optimization experiments</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="ab-tests-list">
+          {% for test in report.ab_tests %}
+          <div class="ab-test-item">
+            <div class="test-hypothesis">
+              <h4>{{ test.hypothesis }}</h4>
+            </div>
+            <div class="test-variants">
+              <div class="variant">
+                <span class="variant-label">A:</span>
+                <span class="variant-text">{{ test.variant_A }}</span>
+              </div>
+              <div class="variant">
+                <span class="variant-label">B:</span>
+                <span class="variant-text">{{ test.variant_B }}</span>
+              </div>
+            </div>
+            <div class="test-metrics">
+              <div class="test-metric">
+                <span class="metric-label">Primary Metric:</span>
+                <span class="metric-value">{{ test.primary_metric }}</span>
+              </div>
+              <div class="test-metric">
+                <span class="metric-label">Expected Impact:</span>
+                <span class="metric-value">{{ test.expected_impact }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Download Options -->
+    <div class="result-card download-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-download"></i>
+        </div>
+        <div class="card-title">
+          <h3>Download Results</h3>
+          <p>Get your analysis in multiple formats</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="download-options">
+          <a href="/download/png/{{ run_id }}" class="download-option">
+            <div class="download-icon">
+              <i class="fas fa-image"></i>
+            </div>
+            <div class="download-text">
+              <span class="download-title">Annotated Image</span>
+              <span class="download-subtitle">High-resolution PNG with overlays</span>
+            </div>
+          </a>
+          
+          <a href="/download/json/{{ run_id }}" class="download-option">
+            <div class="download-icon">
+              <i class="fas fa-code"></i>
+            </div>
+            <div class="download-text">
+              <span class="download-title">Raw Data</span>
+              <span class="download-subtitle">JSON format for further analysis</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="results-actions">
+    <button onclick="window.location.reload()" class="btn-secondary">
+      <i class="fas fa-redo"></i>
+      <span>Analyze Another Page</span>
+    </button>
+    
+    <button onclick="window.print()" class="btn-secondary">
+      <i class="fas fa-print"></i>
+      <span>Print Report</span>
+    </button>
+  </div>
+</div>

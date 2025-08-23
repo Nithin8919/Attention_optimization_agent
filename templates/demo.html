@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero-section">
+  <div class="hero-content">
+    <h2>Demo: Attention Optimization Analysis Output</h2>
+    <p>This page demonstrates what you should see after running an analysis</p>
+  </div>
+</div>
+
+<div class="results-container">
+  <!-- Success Header -->
+  <div class="results-header">
+    <div class="success-indicator">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="success-text">
+        <h2>Analysis Complete!</h2>
+        <p>Your landing page has been analyzed with AI-powered attention optimization insights</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Grid -->
+  <div class="results-grid">
+    
+    <!-- Annotated Image -->
+    <div class="result-card image-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-image"></i>
+        </div>
+        <div class="card-title">
+          <h3>Visual Heatmap & Annotations</h3>
+          <p>AI-generated attention map with CTA highlights and saliency overlay</p>
+        </div>
+        <div class="card-actions">
+          <a href="/outputs/4877db6f.png" class="btn-secondary" target="_blank">
+            <i class="fas fa-external-link-alt"></i>
+            <span>View Full Image</span>
+          </a>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="image-container">
+          <img src="/outputs/4877db6f.png" alt="Annotated Analysis with Heatmap" class="result-image">
+        </div>
+        <div class="image-description">
+          <h4>What You're Seeing:</h4>
+          <ul>
+            <li><strong>Red Overlay:</strong> Saliency heatmap showing attention areas</li>
+            <li><strong>Green Boxes:</strong> CTA locations with labels</li>
+            <li><strong>Person Detection:</strong> Human figures with emotion analysis</li>
+            <li><strong>Attention Grid:</strong> 12x8 grid analysis of visual salience</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="result-card metrics-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="card-title">
+          <h3>Analysis Metrics</h3>
+          <p>Performance indicators and confidence scores</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">CTAs Found</span>
+              <span class="metric-value">1</span>
+            </div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">People Detected</span>
+              <span class="metric-value">0</span>
+            </div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">AI Confidence</span>
+              <span class="metric-value">85.0%</span>
+            </div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="fas fa-eye"></i>
+            </div>
+            <div class="metric-content">
+              <span class="metric-label">Avg CTA Saliency</span>
+              <span class="metric-value">0.30</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optimization Suggestions -->
+    <div class="result-card suggestions-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-lightbulb"></i>
+        </div>
+        <div class="card-title">
+          <h3>AI Optimization Suggestions</h3>
+          <p>Data-driven recommendations for better attention capture</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="suggestions-list">
+          <div class="suggestion-item">
+            <div class="suggestion-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="suggestion-text">
+              Increase contrast on primary CTA
+            </div>
+          </div>
+          <div class="suggestion-item">
+            <div class="suggestion-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="suggestion-text">
+              Use larger font size for key messages
+            </div>
+          </div>
+          <div class="suggestion-item">
+            <div class="suggestion-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="suggestion-text">
+              Break up text into smaller sections
+            </div>
+          </div>
+          <div class="suggestion-item">
+            <div class="suggestion-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="suggestion-text">
+              Add icons or images to support text
+            </div>
+          </div>
+          <div class="suggestion-item">
+            <div class="suggestion-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="suggestion-text">
+              Highlight testimonials more prominently
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Analysis -->
+    <div class="result-card cta-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-hand-pointer"></i>
+        </div>
+        <div class="card-title">
+          <h3>Call-to-Action Analysis</h3>
+          <p>Detailed breakdown of CTA performance</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="cta-list">
+          <div class="cta-item">
+            <div class="cta-header">
+              <div class="cta-priority priority-1">
+                <span class="priority-label">Priority 1</span>
+              </div>
+              <div class="cta-text">Get Started Now</div>
+            </div>
+            
+            <div class="cta-metrics">
+              <div class="cta-metric">
+                <span class="metric-label">Saliency</span>
+                <span class="metric-value">0.30</span>
+              </div>
+              <div class="cta-metric">
+                <span class="metric-label">Contrast</span>
+                <span class="metric-value">0.4</span>
+              </div>
+              <div class="cta-metric">
+                <span class="metric-label">Composition</span>
+                <span class="metric-value">0.50</span>
+              </div>
+            </div>
+            
+            <div class="cta-issues">
+              <span class="issues-label">Issues:</span>
+              <span class="issue-tag">Low contrast with background</span>
+              <span class="issue-tag">Not visually distinct</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A/B Test Ideas -->
+    <div class="result-card ab-tests-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-flask"></i>
+        </div>
+        <div class="card-title">
+          <h3>A/B Test Ideas</h3>
+          <p>Data-driven hypotheses for optimization experiments</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="ab-tests-list">
+          <div class="ab-test-item">
+            <div class="test-hypothesis">
+              <h4>Increasing CTA contrast will improve click-through rates</h4>
+            </div>
+            <div class="test-variants">
+              <div class="variant">
+                <span class="variant-label">A:</span>
+                <span class="variant-text">Current CTA design</span>
+              </div>
+              <div class="variant">
+                <span class="variant-label">B:</span>
+                <span class="variant-text">Higher contrast CTA design</span>
+              </div>
+            </div>
+            <div class="test-metrics">
+              <div class="test-metric">
+                <span class="metric-label">Primary Metric:</span>
+                <span class="metric-value">Click-through rate</span>
+              </div>
+              <div class="test-metric">
+                <span class="metric-label">Expected Impact:</span>
+                <span class="metric-value">Increase by 20%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download Options -->
+    <div class="result-card download-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <i class="fas fa-download"></i>
+        </div>
+        <div class="card-title">
+          <h3>Download Results</h3>
+          <p>Get your analysis in multiple formats</p>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="download-options">
+          <a href="/outputs/4877db6f.png" class="download-option" download>
+            <div class="download-icon">
+              <i class="fas fa-image"></i>
+            </div>
+            <div class="download-text">
+              <span class="download-title">Annotated Image</span>
+              <span class="download-subtitle">High-resolution PNG with heatmap overlay</span>
+            </div>
+          </a>
+          
+          <a href="/outputs/4877db6f.json" class="download-option" download>
+            <div class="download-icon">
+              <i class="fas fa-code"></i>
+            </div>
+            <div class="download-text">
+              <span class="download-title">Raw Data</span>
+              <span class="download-subtitle">JSON format for further analysis</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="results-actions">
+    <a href="/" class="btn-secondary">
+      <i class="fas fa-arrow-left"></i>
+      <span>Back to Analysis</span>
+    </a>
+    
+    <button onclick="window.print()" class="btn-secondary">
+      <i class="fas fa-print"></i>
+      <span>Print Report</span>
+    </button>
+  </div>
+</div>
+
+<style>
+.image-description {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+}
+
+.image-description h4 {
+  margin-bottom: 15px;
+  color: var(--gray-800);
+  font-weight: 600;
+}
+
+.image-description ul {
+  list-style: none;
+  padding: 0;
+}
+
+.image-description li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.image-description li:before {
+  content: "•";
+  color: var(--primary-500);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.image-description strong {
+  color: var(--gray-800);
+}
+</style>
+{% endblock %}
+
