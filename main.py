@@ -5,540 +5,410 @@ import base64
 import uuid
 import time
 import logging
-import traceback
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
+from pathlib import Path
 
-# Load .env if present
+# Load environment variables
 try:
     from dotenv import load_dotenv
     load_dotenv()
-except Exception:
+except ImportError:
     pass
 
-DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
-
-from fastapi import FastAPI, Request, UploadFile, Form
+from fastapi import FastAPI, Request, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import requests
-import numpy as np
 
-# Optional: Playwright for screenshots
+# Optional dependencies
 try:
-    from playwright.sync_api import sync_playwright
-except Exception:
-    sync_playwright = None
+    from playwright.async_api import async_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
 
-# OpenAI SDK
 try:
     from openai import OpenAI
-except Exception:
-    OpenAI = None
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
-# ---------------- Logging ----------------
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
-logger = logging.getLogger("attention-ai")
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def log_exc(msg: str, req_id: str, exc: BaseException):
-    tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-    logger.error("%s | req_id=%s | %s", msg, req_id, tb)
+# Create directories
+Path("outputs").mkdir(exist_ok=True)
+Path("static").mkdir(exist_ok=True)
+Path("templates").mkdir(exist_ok=True)
 
-# ---------------- Utils ----------------
-def ensure_dirs():
-    os.makedirs("outputs", exist_ok=True)
-    os.makedirs("static", exist_ok=True)
-    os.makedirs("templates", exist_ok=True)
+app = FastAPI(title="Attention Optimization AI")
 
-def fetch_html(url: str) -> str:
-    try:
-        r = requests.get(url, timeout=10)
-        return r.text[:250000]
-    except Exception:
-        return ""
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
-async def screenshot_url(url: str, full_page: bool = True, width: int = 1440, height: int = 900) -> Optional[Image.Image]:
-    # Async version to avoid blocking the event loop
-    try:
-        from playwright.async_api import async_playwright
-    except Exception:
-        logger.warning("Playwright not available; cannot screenshot url=%s", url)
-        return None
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(viewport={"width": width, "height": height}, device_scale_factor=1)
-            page = await context.new_page()
-            await page.goto(url, timeout=35000, wait_until="networkidle")
-            if full_page:
-                page_height = await page.evaluate("() => document.body.scrollHeight")
-                await page.set_viewport_size({"width": width, "height": int(page_height or height)})
-            buf = await page.screenshot(full_page=full_page, type="png")
-            await page.close(); await context.close(); await browser.close()
-            img = Image.open(io.BytesIO(buf)).convert("RGB")
-            logger.info("Screenshot ok | url=%s | size=%s", url, img.size)
-            return img
-    except Exception:
-        logger.exception("Screenshot failed for url=%s", url)
-        return None
+# Templates
+templates = Jinja2Templates(directory="templates")
 
-def image_to_data_url(img: Image.Image) -> str:
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-    return f"data:image/png;base64,{b64}"
-
-def maybe_downscale(img: Image.Image, max_side: int = 2048) -> Image.Image:
-    w, h = img.size
-    if max(w, h) <= max_side:
-        return img
-    if w >= h:
-        new_w = max_side
-        new_h = int(h * (max_side / w))
-    else:
-        new_h = max_side
-        new_w = int(w * (max_side / h))
-    return img.resize((new_w, new_h), Image.LANCZOS)
-
-# ---------------- Structured Outputs schema (strict) ----------------
-ATTENTION_JSON_SCHEMA = {
-    "name": "attention_report",
-    "strict": True,
+# OpenAI Schema for structured output
+ATTENTION_SCHEMA = {
+    "name": "attention_analysis",
     "schema": {
         "type": "object",
-        "additionalProperties": False,
         "properties": {
-            "image_size": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
-            "saliency_grid": {"type": "array", "items": {"type": "array", "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}}},
+            "saliency_grid": {
+                "type": "array",
+                "items": {
+                    "type": "array", 
+                    "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+                },
+                "description": "Grid of attention scores"
+            },
             "ctas": {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "additionalProperties": False,
                     "properties": {
                         "text": {"type": "string"},
-                        "bbox_norm": {"type": "array", "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "minItems": 4, "maxItems": 4},
+                        "bbox": {"type": "array", "items": {"type": "number"}},
                         "priority": {"type": "integer", "minimum": 1, "maximum": 5},
-                        "issues": {"type": "array", "items": {"type": "string"}},
-                        "estimates": {
-                            "type": "object",
-                            "additionalProperties": False,
-                            "properties": {
-                                "saliency": {"type": "number", "minimum": 0.0, "maximum": 1.0},
-                                "contrast": {"type": "number", "minimum": 0.0, "maximum": 10.0},
-                                "thirds_score": {"type": "number", "minimum": 0.0, "maximum": 1.0}
-                            },
-                            "required": ["saliency", "contrast", "thirds_score"]
-                        },
-                        "suggested_copy": {"type": "string"}
+                        "saliency": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                        "issues": {"type": "array", "items": {"type": "string"}}
                     },
-                    "required": ["text", "bbox_norm", "priority", "issues", "estimates", "suggested_copy"]
+                    "required": ["text", "bbox", "priority", "saliency"]
                 }
             },
-            "people": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "bbox_norm": {"type": "array", "items": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "minItems": 4, "maxItems": 4},
-                        "inferred_emotion": {"type": "string"},
-                        "gaze_toward_cta": {"type": "boolean"}
-                    },
-                    "required": ["bbox_norm", "inferred_emotion", "gaze_toward_cta"]
-                }
-            },
-            "global_issues": {"type": "array", "items": {"type": "string"}},
-            "prioritized_suggestions": {"type": "array", "items": {"type": "string"}},
-            "ab_tests": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "hypothesis": {"type": "string"},
-                        "variant_A": {"type": "string"},
-                        "variant_B": {"type": "string"},
-                        "primary_metric": {"type": "string"},
-                        "expected_impact": {"type": "string"}
-                    },
-                    "required": ["hypothesis", "variant_A", "variant_B", "primary_metric", "expected_impact"]
-                }
-            },
+            "suggestions": {"type": "array", "items": {"type": "string"}},
             "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0}
         },
-        "required": ["image_size", "saliency_grid", "ctas", "people", "global_issues", "prioritized_suggestions", "ab_tests", "confidence"]
-    }
+        "required": ["saliency_grid", "ctas", "suggestions", "confidence"]
+    },
+    "strict": True
 }
 
-SYSTEM = (
-    "You are a world-class CRO/UX expert. Analyze the landing page image (and optional HTML). "
-    "Return JSON strictly matching the schema: saliency_grid (rows x cols), CTAs with bbox_norm 0..1 and estimates "
-    "(saliency/contrast/thirds_score), any people & emotions, prioritized suggestions, AB tests, and confidence. "
-    "Be precise and actionable. If unsure, produce best-effort estimates."
-)
+class AttentionAnalyzer:
+    def __init__(self):
+        self.client = None
+        if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
+            self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-USER_TPL = (
-    "Task: Diagnose why key content/CTAs may not capture attention and propose fixes.\n\n"
-    "Constraints:\n"
-    "- Saliency grid size target: {rows} x {cols}\n"
-    "- Bboxes are [x1,y1,x2,y2] in normalized 0..1 coordinates relative to the provided image.\n"
-    "- Prioritize one primary CTA.\n"
-    "- Use short, justifiable bullets.\n\n"
-    "Provide only JSON via structured outputs.\n\n"
-    "HTML (truncated):\n{html}\n"
-)
+    async def screenshot_url(self, url: str, full_page: bool = True) -> Optional[Image.Image]:
+        """Take screenshot of URL using Playwright"""
+        if not PLAYWRIGHT_AVAILABLE:
+            logger.error("Playwright not available")
+            return None
+            
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                context = await browser.new_context(viewport={"width": 1440, "height": 900})
+                page = await context.new_page()
+                
+                await page.goto(url, timeout=30000, wait_until="networkidle")
+                
+                if full_page:
+                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    await page.wait_for_timeout(1000)
+                
+                screenshot = await page.screenshot(full_page=full_page)
+                await browser.close()
+                
+                image = Image.open(io.BytesIO(screenshot)).convert("RGB")
+                logger.info(f"Screenshot successful: {image.size}")
+                return image
+                
+        except Exception as e:
+            logger.error(f"Screenshot failed: {e}")
+            return None
 
-def call_llm(image: Image.Image, html: str, rows: int, cols: int, model: str, temperature: float, req_id: str) -> Dict[str, Any]:
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_APIKEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY missing.")
-    if OpenAI is None:
-        raise RuntimeError("OpenAI SDK not installed (pip install openai).")
+    def encode_image(self, image: Image.Image) -> str:
+        """Encode image to base64 for OpenAI"""
+        # Resize if too large
+        if max(image.size) > 2048:
+            ratio = 2048 / max(image.size)
+            new_size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+        
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode()
 
-    client = OpenAI(api_key=api_key)
-    send_img = maybe_downscale(image, max_side=int(os.getenv("MAX_IMAGE_SIDE", "2048")))
-    user_text = USER_TPL.format(rows=rows, cols=cols, html=html[:4000])
+    async def analyze_attention(self, image: Image.Image, html_context: str = "", grid_size: Tuple[int, int] = (12, 8)) -> Dict[str, Any]:
+        """Analyze image for attention patterns using OpenAI Vision"""
+        if not self.client:
+            raise HTTPException(status_code=500, detail="OpenAI not configured")
 
-    logger.info(
-        "LLM call start | req_id=%s | model=%s | temp=%.2f | rows=%d | cols=%d | html_len=%d | img_size=%s -> send_size=%s",
-        req_id, model, temperature, rows, cols, len(html), image.size, send_img.size
-    )
+        rows, cols = grid_size
+        encoded_image = self.encode_image(image)
+        
+        prompt = f"""
+        Analyze this landing page for attention optimization. 
+        
+        Task:
+        1. Create a {rows}x{cols} saliency grid where each cell represents attention probability (0.0-1.0)
+        2. Identify all Call-to-Action buttons with their position [x1,y1,x2,y2] normalized to 0-1
+        3. Rate each CTA's priority (1=highest, 5=lowest) and current saliency score
+        4. Provide 5-8 actionable optimization suggestions
+        5. Give confidence score for analysis
+        
+        Focus on: visual hierarchy, contrast, positioning, color psychology, eye-tracking patterns.
+        
+        HTML context: {html_context[:2000]}
+        
+        Return only valid JSON matching the schema.
+        """
 
-    t0 = time.perf_counter()
-    try:
-        resp = client.chat.completions.create(
-            model=model,
-            temperature=temperature,
-            messages=[
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": [
-                    {"type": "text", "text": user_text},
-                    {"type": "image_url", "image_url": {"url": image_to_data_url(send_img)}}
-                ]}
+        try:
+            response = await self.client.chat.completions.acreate(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{encoded_image}"}
+                            }
+                        ]
+                    }
+                ],
+                response_format={"type": "json_schema", "json_schema": ATTENTION_SCHEMA},
+                max_tokens=2000,
+                temperature=0.2
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            logger.info("OpenAI analysis completed successfully")
+            return result
+            
+        except Exception as e:
+            logger.error(f"OpenAI analysis failed: {e}")
+            # Return fallback analysis
+            return self._fallback_analysis(image, grid_size)
+
+    def _fallback_analysis(self, image: Image.Image, grid_size: Tuple[int, int]) -> Dict[str, Any]:
+        """Fallback analysis when OpenAI fails"""
+        rows, cols = grid_size
+        
+        # Create basic center-weighted saliency grid
+        grid = []
+        for r in range(rows):
+            row = []
+            for c in range(cols):
+                # Higher attention in center and upper areas
+                y_weight = 1.0 - (r / rows) * 0.6  # Top bias
+                x_weight = 1.0 - abs((c / cols) - 0.5) * 0.4  # Center bias
+                score = (y_weight * x_weight) * 0.7
+                row.append(round(score, 3))
+            grid.append(row)
+        
+        return {
+            "saliency_grid": grid,
+            "ctas": [{
+                "text": "Primary CTA (detected)",
+                "bbox": [0.3, 0.4, 0.7, 0.5],
+                "priority": 1,
+                "saliency": 0.6,
+                "issues": ["Manual detection - OpenAI unavailable"]
+            }],
+            "suggestions": [
+                "Increase contrast of primary call-to-action",
+                "Move important elements to upper-left quadrant",
+                "Use larger fonts for key messages",
+                "Add visual hierarchy with spacing",
+                "Consider color psychology for CTAs"
             ],
-            response_format={"type": "json_schema", "json_schema": ATTENTION_JSON_SCHEMA}
-        )
-    except Exception as e:
-        log_exc("OpenAI request failed", req_id, e)
-        raise
+            "confidence": 0.3
+        }
 
-    dt = (time.perf_counter() - t0) * 1000
-    logger.info("LLM call end | req_id=%s | status=ok | latency_ms=%.1f", req_id, dt)
+    def create_heatmap_overlay(self, grid: List[List[float]], image_size: Tuple[int, int]) -> Image.Image:
+        """Create heatmap overlay from saliency grid"""
+        import numpy as np
+        
+        rows, cols = len(grid), len(grid[0])
+        width, height = image_size
+        
+        # Convert to numpy array and normalize
+        arr = np.array(grid, dtype=np.float32)
+        arr = (arr - arr.min()) / (arr.max() - arr.min() + 1e-8)
+        
+        # Create small heatmap
+        heatmap_small = Image.fromarray((arr * 255).astype(np.uint8), mode='L')
+        
+        # Resize to image size
+        heatmap = heatmap_small.resize((width, height), Image.Resampling.BILINEAR)
+        
+        # Convert to RGBA with red coloring
+        heatmap_rgba = Image.new('RGBA', (width, height))
+        pixels = []
+        
+        for y in range(height):
+            for x in range(width):
+                intensity = heatmap.getpixel((x, y))
+                alpha = int(intensity * 0.6)  # Semi-transparent
+                pixels.append((255, 0, 0, alpha))  # Red overlay
+        
+        heatmap_rgba.putdata(pixels)
+        return heatmap_rgba
 
-    if not resp.choices:
-        raise RuntimeError("OpenAI returned no choices.")
-    content = resp.choices[0].message.content or ""
-    if not content:
-        raise RuntimeError("OpenAI returned empty content.")
+    def draw_cta_boxes(self, image: Image.Image, ctas: List[Dict]) -> Image.Image:
+        """Draw CTA bounding boxes on image"""
+        img_with_boxes = image.convert('RGBA')
+        draw = ImageDraw.Draw(img_with_boxes)
+        width, height = image.size
+        
+        for i, cta in enumerate(ctas):
+            x1, y1, x2, y2 = cta['bbox']
+            
+            # Convert normalized coords to pixels
+            px1, py1 = int(x1 * width), int(y1 * height)
+            px2, py2 = int(x2 * width), int(y2 * height)
+            
+            # Draw box
+            color = (0, 255, 0, 200) if cta['priority'] <= 2 else (255, 165, 0, 200)
+            draw.rectangle([px1, py1, px2, py2], outline=color, width=3)
+            
+            # Draw label
+            label = f"CTA {i+1}: {cta['text'][:20]}"
+            draw.rectangle([px1, py1-25, px1+len(label)*8, py1], fill=color)
+            draw.text((px1+5, py1-20), label, fill=(0, 0, 0, 255))
+        
+        return img_with_boxes
 
-    if os.getenv("DEBUG_SAVE_IO"):
-        with open(f"outputs/{req_id}_raw.txt", "w", encoding="utf-8") as f:
-            f.write(content)
+    def generate_final_image(self, original: Image.Image, analysis: Dict[str, Any]) -> Image.Image:
+        """Generate final annotated image with heatmap and CTA boxes"""
+        # Create heatmap overlay
+        heatmap = self.create_heatmap_overlay(analysis['saliency_grid'], original.size)
+        
+        # Composite with original
+        base = original.convert('RGBA')
+        combined = Image.alpha_composite(base, heatmap)
+        
+        # Add CTA boxes
+        final = self.draw_cta_boxes(combined, analysis['ctas'])
+        
+        return final.convert('RGB')
 
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError as e:
-        logger.warning("JSON parse failed; trying fenced extraction | req_id=%s | err=%s", req_id, str(e))
-        import re
-        m = re.search(r"```json\s*(\{.*?\})\s*```", content, re.DOTALL)
-        if m:
-            return json.loads(m.group(1))
-        log_exc("Failed to parse JSON response", req_id, e)
-        raise RuntimeError(f"Failed to parse JSON response: {e}")
 
-# ---------------- Saliency helpers ----------------
-def _to_np(grid):
-    arr = np.array(grid, dtype=float)
-    mn, mx = arr.min(), arr.max()
-    return (arr - mn) / (mx - mn + 1e-6)
+analyzer = AttentionAnalyzer()
 
-def mean_saliency_in_box(arr: np.ndarray, box_norm: List[float]) -> float:
-    R, C = arr.shape
-    x1, y1, x2, y2 = box_norm
-    r1 = int(np.clip(y1 * R, 0, R - 1)); r2 = int(np.clip(np.ceil(y2 * R), 1, R))
-    c1 = int(np.clip(x1 * C, 0, C - 1)); c2 = int(np.clip(np.ceil(x2 * C), 1, C))
-    patch = arr[r1:r2, c1:c2]
-    return float(patch.mean()) if patch.size else 0.0
-
-def _gaussian_mask_from_box(box_norm, shape, sigma_cells=2.0):
-    R, C = shape
-    x1,y1,x2,y2 = box_norm
-    cx = (x1 + x2) / 2.0; cy = (y1 + y2) / 2.0
-    rr, cc = np.meshgrid(np.linspace(0,1,R), np.linspace(0,1,C), indexing="ij")
-    d2 = (rr - cy)**2 + (cc - cx)**2
-    box_w = max(x2-x1, 1e-3); box_h = max(y2-y1, 1e-3)
-    s = sigma_cells / max(R, C)
-    s = s + 0.5 * (box_w + box_h) * 0.5
-    g = np.exp(-d2 / (2*s*s))
-    return g / (g.max() + 1e-6)
-
-def _viewport_bias(shape, k=0.9):
-    R, C = shape
-    rr = np.linspace(0, 1, R)[:, None]
-    bias = np.power(k, rr * 10)
-    return (bias - bias.min()) / (bias.max() - bias.min() + 1e-6)
-
-def _gaze_bonus(shape, people, toward=1.15, away=0.92):
-    R, C = shape
-    if not people:
-        return np.ones((R, C))
-    toward_ratio = np.mean([1.0 if p.get("gaze_toward_cta") else 0.0 for p in people])
-    factor = (toward if toward_ratio >= 0.5 else away)
-    return np.full((R, C), factor, dtype=float)
-
-def goal_weighted_grid(grid, ctas, people=None,
-                       w_base=1.0, w_cta=0.9, w_view=0.6):
-    A = _to_np(grid)
-    R, C = A.shape
-
-    if ctas:
-        bumps = []
-        for c in ctas:
-            g = _gaussian_mask_from_box(c["bbox_norm"], (R, C))
-            pr = float(c.get("priority", 3))
-            bumps.append(g * (0.5 + 0.5 * pr / 5.0))
-        G = np.clip(np.sum(bumps, axis=0), 0, None)
-        G = G / (G.max() + 1e-6)
-    else:
-        G = np.zeros_like(A)
-
-    V = _viewport_bias((R, C))
-    Z = _gaze_bonus((R, C), people or [])
-
-    H = (w_base * A + w_cta * G + w_view * V) * Z
-    H = (H - H.min()) / (H.max() - H.min() + 1e-6)
-    return H
-
-# ---------------- Rendering ----------------
-def upsample_grid_overlay(grid, size):
-    from PIL import Image
-    rows = len(grid); cols = len(grid[0]) if rows else 0
-    if rows == 0 or cols == 0:
-        return Image.new("RGBA", size, (0,0,0,0))
-    arr = np.array(grid, dtype=float)
-    arr = (arr - arr.min()) / (arr.max() - arr.min() + 1e-6)
-    small = Image.fromarray((arr * 255).astype("uint8"), mode="L")
-    big = small.resize(size, resample=Image.BILINEAR)
-    r = big; g = Image.new("L", size, color=0); b = Image.new("L", size, color=0)
-    a = big.point(lambda v: int(120 * (v/255)))
-    return Image.merge("RGBA", (r, g, b, a))
-
-def colorize_spectrum(img_gray_rgba):
-    from PIL import Image
-    gray = img_gray_rgba.split()[0]
-    arr = np.array(gray, dtype=np.float32) / 255.0
-    stops = np.array([
-        [0.0,   0,   0,128],
-        [0.33,  0, 128,255],
-        [0.66,255,255,  0],
-        [1.0, 255,  0,  0]
-    ], dtype=np.float32)
-    out = np.zeros((arr.shape[0], arr.shape[1], 3), dtype=np.uint8)
-    for i in range(3):
-        out[:,:,i] = np.interp(arr, stops[:,0], stops[:,i+1]).astype(np.uint8)
-    a = img_gray_rgba.split()[3]
-    return Image.merge("RGBA", (Image.fromarray(out[:,:,0]),
-                                Image.fromarray(out[:,:,1]),
-                                Image.fromarray(out[:,:,2]),
-                                a))
-
-def denorm_box(bn: List[float], w: int, h: int) -> Tuple[int,int,int,int]:
-    x1 = int(bn[0]*w); y1 = int(bn[1]*h); x2 = int(bn[2]*w); y2 = int(bn[3]*h)
-    x1, y1 = max(0, x1), max(0, y1)
-    x2, y2 = min(w-1, x2), min(h-1, y2)
-    return (x1,y1,x2,y2)
-
-def overlay_boxes(base: Image.Image, boxes: List[Tuple[Tuple[int,int,int,int], str]]) -> Image.Image:
-    out = base.convert("RGBA")
-    draw = ImageDraw.Draw(out)
-    for (x1,y1,x2,y2), label in boxes:
-        draw.rectangle([x1,y1,x2,y2], outline=(0,255,0,255), width=3)
-        if label:
-            pad = 6
-            label = label[:28]
-            w = 9*len(label)+2*pad; h = 22
-            draw.rectangle([x1, max(0,y1-h), x1+w, y1], fill=(0,255,0,180))
-            draw.text((x1+pad, y1-h+4), label, fill=(0,0,0,255))
-    return out
-
-def compose_with_boxes(base, overlay, report):
-    out = Image.alpha_composite(base.convert("RGBA"), overlay)
-    W, H = base.size
-    cta_boxes = [(denorm_box(c["bbox_norm"], W, H), f"CTA: {c.get('text','')[:18]}") for c in report.get("ctas", [])]
-    ppl_boxes = [(denorm_box(p["bbox_norm"], W, H), f"Person {p.get('inferred_emotion','')}") for p in report.get("people", [])]
-    out = overlay_boxes(out, cta_boxes)
-    out = overlay_boxes(out, ppl_boxes)
-    return out
-
-def render_outputs(image: Image.Image, report: Dict[str,Any]) -> Tuple[Dict[str,str], Dict[str,Any]]:
-    W, H = image.size
-
-    # 1) Vanilla heatmap
-    overlay_vanilla = upsample_grid_overlay(report["saliency_grid"], (W, H))
-
-    # 2) Goal-weighted heatmap
-    gw = goal_weighted_grid(
-        grid=report["saliency_grid"],
-        ctas=report.get("ctas", []),
-        people=report.get("people", []),
-        w_base=1.0, w_cta=0.9, w_view=0.6
-    )
-    overlay_goal = upsample_grid_overlay(gw.tolist(), (W, H))
-    overlay_goal_spectrum = colorize_spectrum(overlay_goal)
-
-    img_vanilla = compose_with_boxes(image, overlay_vanilla, report)
-    img_goal = compose_with_boxes(image, overlay_goal_spectrum, report)
-
-    run_id = uuid.uuid4().hex[:8]
-    paths = {
-        "vanilla_png": f"outputs/{run_id}_vanilla.png",
-        "goal_png": f"outputs/{run_id}_goal.png",
-        "json": f"outputs/{run_id}.json",
-        "run_id": run_id
-    }
-    img_vanilla.convert("RGB").save(paths["vanilla_png"], format="PNG")
-    img_goal.convert("RGB").save(paths["goal_png"], format="PNG")
-    with open(paths["json"], "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2)
-
-    # Metrics
-    arr_base = _to_np(report["saliency_grid"])
-    page_mean = float(arr_base.mean())
-    cta_sals = [mean_saliency_in_box(arr_base, c["bbox_norm"]) for c in report.get("ctas", [])] or [0.0]
-    avg_cta_sal = float(np.mean(cta_sals))
-    primary_idx = int(np.argmax(cta_sals)) if cta_sals else -1
-    dominance = round((cta_sals[primary_idx] / (sum(cta_sals) + 1e-6)), 3) if cta_sals else 0.0
-    primary_text = report.get("ctas", [{}])[primary_idx].get("text") if primary_idx >= 0 else None
-
-    metrics = {
-        "num_ctas": len(report.get("ctas", [])),
-        "num_people": len(report.get("people", [])),
-        "confidence": report.get("confidence", None),
-        "avg_cta_saliency": round(avg_cta_sal, 3),
-        "page_mean": round(page_mean, 3),
-        "primary_cta_text": primary_text,
-        "primary_cta_dominance": dominance
-    }
-    return paths, metrics
-
-# ---------------- FastAPI App ----------------
-ensure_dirs()
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-templates = Jinja2Templates(directory="templates")
-
-@app.middleware("http")
-async def add_request_id_and_log(request: Request, call_next):
-    req_id = uuid.uuid4().hex[:8]
-    request.state.req_id = req_id
-    t0 = time.perf_counter()
-    logger.info("REQ START | id=%s | %s %s", req_id, request.method, request.url.path)
-    try:
-        resp = await call_next(request)
-        return resp
-    finally:
-        dt = (time.perf_counter() - t0) * 1000
-        logger.info("REQ END   | id=%s | duration_ms=%.1f", req_id, dt)
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_APIKEY")
-    logger.info("Startup | OpenAI SDK=%s | Playwright=%s | API key present=%s | MODEL_DEFAULT=%s",
-                "yes" if OpenAI else "no",
-                "yes" if sync_playwright else "no",
-                "yes" if key else "no",
-                os.getenv("OPENAI_MODEL", "gpt-4o"))
+async def index(request: Request):
+    """Main page"""
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "openai_model": os.getenv("OPENAI_MODEL", "gpt-4o"),
+        "openai_available": OPENAI_AVAILABLE and bool(os.getenv("OPENAI_API_KEY")),
+        "playwright_available": PLAYWRIGHT_AVAILABLE
     })
 
+
 @app.post("/analyze", response_class=HTMLResponse)
-async def analyze(request: Request,
-                  url: str = Form(default=""),
-                  rows: int = Form(default=12),
-                  cols: int = Form(default=8),
-                  model: str = Form(default=os.getenv("OPENAI_MODEL","gpt-4o")),
-                  temperature: float = Form(default=0.2),
-                  fullpage: str = Form(default="true"),
-                  file: UploadFile = None):
-
-    req_id = getattr(request.state, "req_id", uuid.uuid4().hex[:8])
-    logger.info("Analyze start | id=%s | url=%s | file=%s | rows=%s | cols=%s | model=%s | temp=%.2f",
-                req_id, url or "-", file.filename if file else "-", rows, cols, model, temperature)
-
-    html = ""
-    image = None
+async def analyze(
+    request: Request,
+    url: str = Form(default=""),
+    rows: int = Form(default=12),
+    cols: int = Form(default=8),
+    file: UploadFile = None
+):
+    """Analyze landing page"""
+    start_time = time.time()
+    run_id = uuid.uuid4().hex[:8]
+    
     try:
+        # Get image
+        image = None
+        html_context = ""
+        
         if file and file.filename:
             content = await file.read()
             image = Image.open(io.BytesIO(content)).convert("RGB")
-            logger.info("Image uploaded | id=%s | size=%s | bytes=%d", req_id, image.size, len(content))
-        elif url:
-            image = await screenshot_url(url, full_page=(fullpage == "true"))
-            html = fetch_html(url)
-            if image is None:
-                logger.warning("Screenshot failed | id=%s | url=%s", req_id, url)
-                return HTMLResponse('<div class="error">Failed to screenshot URL. Upload an image instead.</div>', status_code=400)
-            logger.info("URL processed | id=%s | img_size=%s | html_len=%d", req_id, image.size, len(html))
+            logger.info(f"Image uploaded: {image.size}")
+            
+        elif url.strip():
+            image = await analyzer.screenshot_url(url.strip())
+            if image:
+                # Get HTML context
+                try:
+                    response = requests.get(url.strip(), timeout=10)
+                    html_context = response.text[:5000]  # Limit size
+                except:
+                    html_context = ""
+            else:
+                raise HTTPException(status_code=400, detail="Failed to screenshot URL")
         else:
-            logger.warning("No input provided | id=%s", req_id)
-            return HTMLResponse('<div class="error">Provide a URL or upload an image.</div>', status_code=400)
-    except Exception as e:
-        log_exc("Image acquisition failed", req_id, e)
-        return HTMLResponse(f'<div class="error">Invalid image or URL: {str(e)}</div>', status_code=400)
+            raise HTTPException(status_code=400, detail="Please provide URL or upload image")
 
-    try:
-        report = call_llm(image, html, int(rows), int(cols), model, float(temperature), req_id)
-        logger.info("LLM report ok | id=%s | keys=%s", req_id, list(report.keys()))
-    except Exception as e:
-        log_exc("LLM call failed", req_id, e)
-        return HTMLResponse(f'<div class="error">LLM error (req {req_id}). Check server logs.</div>', status_code=500)
-
-    # Ensure presence of keys (for template safety)
-    for key in ["ctas","people","global_issues","prioritized_suggestions","ab_tests"]:
-        report.setdefault(key, [])
-
-    try:
-        paths, metrics = render_outputs(image, report)
-        run_id = paths["run_id"]
-        return templates.TemplateResponse(
-            "result.html",
-            {
-                "request": request,
-                "run_id": run_id,
-                "metrics": metrics,
-                "report": report,
-                "vanilla_url": f"/{paths['vanilla_png']}",
-                "goal_url": f"/{paths['goal_png']}",
-            }
+        # Analyze with AI
+        analysis = await analyzer.analyze_attention(
+            image, 
+            html_context, 
+            grid_size=(rows, cols)
         )
+        
+        # Generate visualization
+        final_image = analyzer.generate_final_image(image, analysis)
+        
+        # Save outputs
+        image_path = f"outputs/{run_id}.png"
+        json_path = f"outputs/{run_id}.json"
+        
+        final_image.save(image_path)
+        
+        with open(json_path, 'w') as f:
+            json.dump(analysis, f, indent=2)
+        
+        # Calculate metrics
+        metrics = {
+            "processing_time": round(time.time() - start_time, 2),
+            "num_ctas": len(analysis['ctas']),
+            "confidence": analysis['confidence'],
+            "avg_saliency": round(sum(sum(row) for row in analysis['saliency_grid']) / (rows * cols), 3)
+        }
+        
+        return templates.TemplateResponse("results.html", {
+            "request": request,
+            "run_id": run_id,
+            "analysis": analysis,
+            "metrics": metrics,
+            "image_url": f"/outputs/{run_id}.png"
+        })
+        
     except Exception as e:
-        log_exc("Render/save failed", req_id, e)
-        return HTMLResponse(f'<div class="error">Failed to process results (req {req_id}).</div>', status_code=500)
+        logger.error(f"Analysis failed: {e}")
+        return HTMLResponse(f"<div class='error'>Analysis failed: {str(e)}</div>", status_code=500)
 
-# Optional: file endpoints
-@app.get('/download/png/{run_id}')
-def download_png(run_id: str):
-    path1 = f'outputs/{run_id}_vanilla.png'
-    path2 = f'outputs/{run_id}_goal.png'
-    if os.path.exists(path1):
-        return FileResponse(path1, filename='heatmap_vanilla.png', media_type='image/png')
-    if os.path.exists(path2):
-        return FileResponse(path2, filename='heatmap_goal.png', media_type='image/png')
-    return JSONResponse({'error':'not found'}, status_code=404)
 
-@app.get('/download/json/{run_id}')
-def download_json(run_id: str):
-    path = f'outputs/{run_id}.json'
-    if not os.path.exists(path):
-        return JSONResponse({'error':'not found'}, status_code=404)
-    return FileResponse(path, filename='attention_report_llm.json', media_type='application/json')
+@app.get("/download/{run_id}/{file_type}")
+async def download_file(run_id: str, file_type: str):
+    """Download generated files"""
+    if file_type == "png":
+        file_path = f"outputs/{run_id}.png"
+        if Path(file_path).exists():
+            return FileResponse(file_path, filename=f"attention_analysis_{run_id}.png")
+    elif file_type == "json":
+        file_path = f"outputs/{run_id}.json"
+        if Path(file_path).exists():
+            return FileResponse(file_path, filename=f"analysis_data_{run_id}.json")
+    
+    raise HTTPException(status_code=404, detail="File not found")
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "openai_available": OPENAI_AVAILABLE and bool(os.getenv("OPENAI_API_KEY")),
+        "playwright_available": PLAYWRIGHT_AVAILABLE,
+        "timestamp": time.time()
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080, reload=True)

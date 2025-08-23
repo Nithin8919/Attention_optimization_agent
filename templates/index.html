@@ -1,173 +1,266 @@
-
-{% extends "base.html" %}
-{% block content %}
-  <div class="hero-section">
-    <div class="hero-content">
-      <h2>Transform Your Landing Pages with AI-Powered Attention Analysis</h2>
-      <p>Get professional CRO insights, saliency maps, and optimization recommendations powered by OpenAI Vision</p>
-      <div class="hero-actions">
-        <a href="/demo" class="btn-secondary">
-          <i class="fas fa-eye"></i>
-          <span>View Sample Output</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-<div class="main-grid">
-  <!-- Analysis Form -->
-  <div class="form-card">
-    <div class="card-header">
-      <div class="card-icon">
-        <i class="fas fa-rocket"></i>
-      </div>
-      <div class="card-title">
-        <h3>Start Analysis</h3>
-        <p>Enter a URL or upload an image to begin</p>
-      </div>
-    </div>
-
-    <form id="analyze-form" hx-post="/analyze" hx-target="#results" hx-swap="innerHTML" enctype="multipart/form-data" class="analysis-form">
-      
-      <!-- URL Input Section -->
-      <div class="form-section">
-        <div class="section-header">
-          <i class="fas fa-link"></i>
-          <h4>Landing Page URL</h4>
-        </div>
-        <div class="input-group">
-          <input type="url" name="url" placeholder="https://example.com" class="form-input url-input">
-          <div class="input-actions">
-            <label class="checkbox-wrapper">
-              <input type="checkbox" name="fullpage" value="true" checked>
-              <span class="checkmark"></span>
-              <span class="checkbox-label">Full-page screenshot</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Analysis Settings -->
-      <div class="form-section">
-        <div class="section-header">
-          <i class="fas fa-cogs"></i>
-          <h4>Analysis Settings</h4>
-        </div>
-        <div class="settings-grid">
-          <div class="setting-group">
-            <label>Saliency Grid</label>
-            <div class="grid-controls">
-              <div class="input-pair">
-                <input type="number" name="rows" value="12" min="6" max="24" class="form-input small">
-                <span class="input-label">Rows</span>
-              </div>
-              <div class="input-pair">
-                <input type="number" name="cols" value="8" min="6" max="24" class="form-input small">
-                <span class="input-label">Columns</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="setting-group">
-            <label>AI Model</label>
-            <input type="text" name="model" value="{{ openai_model }}" class="form-input">
-          </div>
-          
-          <div class="setting-group">
-            <label>Creativity Level</label>
-            <div class="slider-container">
-              <input type="range" name="temperature" min="0" max="1" step="0.1" value="0.2" class="slider" id="temperature-slider">
-              <div class="slider-labels">
-                <span>Focused</span>
-                <span id="temperature-value">0.2</span>
-                <span>Creative</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- File Upload Section -->
-      <div class="form-section">
-        <div class="section-header">
-          <i class="fas fa-upload"></i>
-          <h4>Or Upload Screenshot</h4>
-        </div>
-        <div class="file-upload-area">
-          <input type="file" name="file" accept="image/png,image/jpeg,image/webp" id="file-input" class="file-input">
-          <label for="file-input" class="file-upload-label">
-            <div class="upload-icon">
-              <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <div class="upload-text">
-              <span class="upload-title">Choose an image file</span>
-              <span class="upload-subtitle">PNG, JPEG, or WebP up to 10MB</span>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <!-- Submit Button -->
-      <div class="form-actions">
-        <button type="submit" class="btn-primary">
-          <i class="fas fa-magic"></i>
-          <span>Analyze with AI</span>
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Preview Card -->
-  <div class="preview-card">
-    <div class="card-header">
-      <div class="card-icon">
-        <i class="fas fa-eye"></i>
-      </div>
-      <div class="card-title">
-        <h3>Preview</h3>
-        <p>Your image will appear here after upload or URL capture</p>
-      </div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Optimization AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
     
-    <div class="preview-content">
-      <div class="preview-placeholder">
-        <i class="fas fa-image"></i>
-        <p>No image selected</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Results Section -->
-<section id="results" class="results-section">
-  <!-- HTMX will inject results here -->
-</section>
-
-<script>
-  // Temperature slider value display
-  document.getElementById('temperature-slider').addEventListener('input', function(e) {
-    document.getElementById('temperature-value').textContent = e.target.value;
-  });
-
-  // File input preview
-  document.getElementById('file-input').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const preview = document.querySelector('.preview-content');
-        preview.innerHTML = `
-          <div class="image-preview">
-            <img src="${e.target.result}" alt="Preview" class="preview-image">
-            <div class="image-info">
-              <span class="file-name">${file.name}</span>
-              <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+    <!-- Header -->
+    <header class="bg-black/20 backdrop-blur-sm border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-eye text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Attention Optimization AI</h1>
+                        <p class="text-slate-300">AI-powered landing page analysis</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 px-3 py-1 bg-green-500/20 rounded-lg">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm">
+                            {% if openai_available %}Ready{% else %}Setup Required{% endif %}
+                        </span>
+                    </div>
+                </div>
             </div>
-          </div>
-        `;
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-</script>
-{% endblock %}
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h2 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Transform Your Landing Pages
+            </h2>
+            <p class="text-xl text-slate-300 max-w-3xl mx-auto">
+                Get AI-powered attention heatmaps, CTA analysis, and optimization recommendations to boost your conversion rates.
+            </p>
+        </div>
+
+        <!-- Status Alerts -->
+        {% if not openai_available %}
+        <div class="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 mb-8">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-exclamation-triangle text-amber-400"></i>
+                <div>
+                    <h4 class="font-semibold text-amber-200">OpenAI Setup Required</h4>
+                    <p class="text-amber-300">Set your OPENAI_API_KEY environment variable to enable AI analysis.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not playwright_available %}
+        <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 mb-8">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-info-circle text-blue-400"></i>
+                <div>
+                    <h4 class="font-semibold text-blue-200">URL Screenshots Disabled</h4>
+                    <p class="text-blue-300">Install Playwright to enable URL analysis: <code class="bg-black/30 px-2 py-1 rounded">pip install playwright && playwright install</code></p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Analysis Form -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            
+            <!-- Form Card -->
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-upload text-blue-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">Start Analysis</h3>
+                        <p class="text-slate-400">Enter URL or upload image</p>
+                    </div>
+                </div>
+
+                <form hx-post="/analyze" 
+                      hx-target="#results" 
+                      hx-swap="innerHTML"
+                      hx-indicator="#loading"
+                      enctype="multipart/form-data" 
+                      class="space-y-6">
+                    
+                    <!-- URL Input -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Landing Page URL</label>
+                        <input type="url" 
+                               name="url" 
+                               placeholder="https://example.com"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- OR Divider -->
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-white/20"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-slate-900 text-slate-400">OR</span>
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Upload Screenshot</label>
+                        <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors">
+                            <input type="file" 
+                                   name="file" 
+                                   accept="image/*"
+                                   class="hidden" 
+                                   id="file-input">
+                            <label for="file-input" class="cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3"></i>
+                                <div class="text-slate-300">Click to upload or drag and drop</div>
+                                <div class="text-sm text-slate-500">PNG, JPG, WebP up to 10MB</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Grid Rows</label>
+                            <input type="number" 
+                                   name="rows" 
+                                   value="12" 
+                                   min="6" 
+                                   max="24"
+                                   class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Grid Columns</label>
+                            <input type="number" 
+                                   name="cols" 
+                                   value="8" 
+                                   min="6" 
+                                   max="24"
+                                   class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                        <i class="fas fa-magic"></i>
+                        <span>Analyze with AI</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Preview/Info Card -->
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-purple-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">What You'll Get</h3>
+                        <p class="text-slate-400">Comprehensive CRO analysis</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-red-500/20 rounded-lg flex items-center justify-center mt-1">
+                            <i class="fas fa-fire text-red-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-red-300">Attention Heatmap</h4>
+                            <p class="text-slate-400 text-sm">Visual overlay showing where users look first</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center mt-1">
+                            <i class="fas fa-bullseye text-green-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-green-300">CTA Analysis</h4>
+                            <p class="text-slate-400 text-sm">Detailed breakdown of button performance</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center mt-1">
+                            <i class="fas fa-lightbulb text-blue-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-blue-300">Optimization Tips</h4>
+                            <p class="text-slate-400 text-sm">AI-powered suggestions to boost conversions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center mt-1">
+                            <i class="fas fa-download text-yellow-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-yellow-300">Export Options</h4>
+                            <p class="text-slate-400 text-sm">PNG images and JSON data for reports</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Preview -->
+                <div class="mt-8 p-4 bg-black/20 rounded-lg border border-white/10">
+                    <div class="text-sm text-slate-400 mb-2">Example Output:</div>
+                    <div class="bg-gradient-to-r from-red-500/20 to-yellow-500/20 h-24 rounded-lg flex items-center justify-center">
+                        <span class="text-xs text-slate-300">Heatmap Visualization</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="htmx-indicator fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20">
+                <div class="animate-spin w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full mx-auto mb-4"></div>
+                <h3 class="text-xl font-bold mb-2">Analyzing with AI...</h3>
+                <p class="text-slate-400">This may take 10-30 seconds</p>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results" class="mt-12"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-black/20 backdrop-blur-sm border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-400">
+                Powered by OpenAI Vision & Claude AI • 
+                <a href="https://github.com" class="text-blue-400 hover:text-blue-300">View on GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // File upload preview
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const label = e.target.nextElementSibling;
+                label.innerHTML = `
+                    <i class="fas fa-check-circle text-3xl text-green-400 mb-3"></i>
+                    <div class="text-green-300">${file.name}</div>
+                    <div class="text-sm text-slate-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
