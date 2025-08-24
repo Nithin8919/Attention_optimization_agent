@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Debug - Attention Optimization AI</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .form-group { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #2d2d2d; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+        }
+        input, button { 
+            padding: 10px; 
+            margin: 5px; 
+            border-radius: 4px; 
+            border: 1px solid #555; 
+        }
+        input[type="url"], input[type="text"] { 
+            width: 100%; 
+            background: #3d3d3d; 
+            color: white; 
+            box-sizing: border-box; 
+        }
+        input[type="file"] { 
+            background: #3d3d3d; 
+            color: white; 
+            padding: 10px; 
+            border: 2px dashed #555; 
+            border-radius: 8px; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            padding: 12px 24px; 
+            font-size: 16px; 
+        }
+        button:hover { background: #0056b3; }
+        .test-result { 
+            background: #333; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid #007bff; 
+        }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+        .form-test { 
+            background: #2d2d2d; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+        }
+        .form-test h3 { margin-top: 0; color: #007bff; }
+        .debug-info { 
+            background: #1a1a1a; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            margin: 10px 0; 
+            overflow-x: auto; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Form Input Debug Page</h1>
+    <p>This page helps debug issues with URL input and file upload functionality.</p>
+    
+    <div class="form-group">
+        <h3>Test 1: Basic Input Field</h3>
+        <input type="text" id="basic-input" placeholder="Type here to test basic input..." style="width: 100%;">
+        <button onclick="testBasicInput()">Test Basic Input</button>
+        <div id="basic-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 2: URL Input Field</h3>
+        <input type="url" id="url-input" name="url" placeholder="https://example.com" style="width: 100%;">
+        <button onclick="testUrlInput()">Test URL Input</button>
+        <div id="url-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 3: File Upload</h3>
+        <input type="file" id="file-input" name="file" accept="image/*" style="width: 100%;">
+        <button onclick="testFileInput()">Test File Input</button>
+        <div id="file-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 4: Form Submission (Direct)</h3>
+        <form id="test-form" action="/debug" method="post" enctype="multipart/form-data">
+            <input type="url" name="test_url" placeholder="Enter URL..." style="width: 100%; margin-bottom: 10px;">
+            <input type="file" name="test_file" accept="image/*" style="width: 100%; margin-bottom: 10px;">
+            <br>
+            <button type="submit">Test Submit</button>
+        </form>
+        <div id="form-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 5: Form Submission (HTMX)</h3>
+        <form hx-post="/debug" 
+              hx-target="#htmx-result" 
+              hx-swap="innerHTML"
+              enctype="multipart/form-data">
+            <input type="url" name="test_url" placeholder="Enter URL..." style="width: 100%; margin-bottom: 10px;">
+            <input type="file" name="test_file" accept="image/*" style="width: 100%; margin-bottom: 10px;">
+            <br>
+            <button type="submit">Test HTMX Submit</button>
+        </form>
+        <div id="htmx-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 6: JavaScript Test</h3>
+        <button onclick="testJavaScript()">Test JavaScript</button>
+        <button onclick="testInputs()">Test Input Access</button>
+        <button onclick="testFormValidation()">Test Form Validation</button>
+        <div id="js-result" class="test-result"></div>
+    </div>
+    
+    <div class="form-group">
+        <h3>Test 7: Main App Form Test</h3>
+        <form action="/analyze" method="post" enctype="multipart/form-data">
+            <input type="url" name="url" placeholder="https://example.com" style="width: 100%; margin-bottom: 10px;">
+            <input type="file" name="file" accept="image/*" style="width: 100%; margin-bottom: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <input type="number" name="rows" value="12" min="6" max="24" placeholder="Rows">
+                <input type="number" name="cols" value="8" min="6" max="24" placeholder="Columns">
+            </div>
+            <button type="submit">Test Main App Form</button>
+        </form>
+    </div>
+    
+    <div class="form-group">
+        <h3>Debug Information</h3>
+        <div id="debug-info" class="debug-info">
+            <div>User Agent: <span id="user-agent"></span></div>
+            <div>JavaScript Enabled: <span id="js-enabled"></span></div>
+            <div>HTMX Available: <span id="htmx-available"></span></div>
+            <div>Form Elements Found: <span id="form-count"></span></div>
+            <div>Input Elements Found: <span id="input-count"></span></div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="/" style="color: #007bff; text-decoration: none; padding: 10px 20px; border: 1px solid #007bff; border-radius: 4px;">← Back to Main App</a>
+    </div>
+    
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        // Initialize debug info
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        document.getElementById('js-enabled').textContent = 'Yes';
+        document.getElementById('htmx-available').textContent = typeof htmx !== 'undefined' ? 'Yes' : 'No';
+        document.getElementById('form-count').textContent = document.forms.length;
+        document.getElementById('input-count').textContent = document.querySelectorAll('input').length;
+        
+        function testBasicInput() {
+            const input = document.getElementById('basic-input');
+            const result = document.getElementById('basic-result');
+            if (input.value) {
+                result.innerHTML = `<strong>Success:</strong> Input value: "${input.value}"`;
+                result.className = 'test-result success';
+            } else {
+                result.innerHTML = '<strong>Error:</strong> No input value';
+                result.className = 'test-result error';
+            }
+        }
+        
+        function testUrlInput() {
+            const input = document.getElementById('url-input');
+            const result = document.getElementById('url-result');
+            if (input.value && input.checkValidity()) {
+                result.innerHTML = `<strong>Success:</strong> Valid URL: "${input.value}"`;
+                result.className = 'test-result success';
+            } else {
+                result.innerHTML = '<strong>Error:</strong> Invalid or empty URL';
+                result.className = 'test-result error';
+            }
+        }
+        
+        function testFileInput() {
+            const input = document.getElementById('file-input');
+            const result = document.getElementById('file-result');
+            if (input.files && input.files.length > 0) {
+                const file = input.files[0];
+                result.innerHTML = `<strong>Success:</strong> File selected: "${file.name}" (${(file.size / 1024).toFixed(2)} KB)`;
+                result.className = 'test-result success';
+            } else {
+                result.innerHTML = '<strong>Error:</strong> No file selected';
+                result.className = 'test-result error';
+            }
+        }
+        
+        function testJavaScript() {
+            const result = document.getElementById('js-result');
+            result.innerHTML = '<strong>Success:</strong> JavaScript is working!';
+            result.className = 'test-result success';
+        }
+        
+        function testInputs() {
+            const inputs = document.querySelectorAll('input');
+            const result = document.getElementById('js-result');
+            let info = `<strong>Found ${inputs.length} inputs:</strong><br>`;
+            
+            inputs.forEach((input, i) => {
+                const disabled = input.disabled ? ' (disabled)' : '';
+                const readonly = input.readOnly ? ' (readonly)' : '';
+                const hidden = input.type === 'hidden' ? ' (hidden)' : '';
+                info += `Input ${i}: ${input.type} - ${input.name || 'no-name'}${disabled}${readonly}${hidden}<br>`;
+            });
+            
+            result.innerHTML = info;
+            result.className = 'test-result';
+        }
+        
+        function testFormValidation() {
+            const forms = document.querySelectorAll('form');
+            const result = document.getElementById('js-result');
+            let info = `<strong>Form validation test:</strong><br>`;
+            
+            forms.forEach((form, i) => {
+                const inputs = form.querySelectorAll('input');
+                const valid = form.checkValidity();
+                info += `Form ${i}: ${valid ? 'Valid' : 'Invalid'} (${inputs.length} inputs)<br>`;
+            });
+            
+            result.innerHTML = info;
+            result.className = 'test-result';
+        }
+        
+        // Test if inputs are responsive
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                console.log('Input focused:', input.type, input.name);
+            });
+            input.addEventListener('change', () => {
+                console.log('Input changed:', input.type, input.name, input.value);
+            });
+            input.addEventListener('input', () => {
+                console.log('Input typing:', input.type, input.name, input.value);
+            });
+        });
+        
+        // Test form submissions
+        document.querySelectorAll('form').forEach((form, i) => {
+            form.addEventListener('submit', (e) => {
+                console.log(`Form ${i} submitted:`, form.action, form.method);
+                // Don't prevent default for testing
+            });
+        });
+        
+        console.log('Debug page loaded successfully');
+        console.log('Forms found:', document.forms.length);
+        console.log('Inputs found:', document.querySelectorAll('input').length);
+    </script>
+</body>
+</html>

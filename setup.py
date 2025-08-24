@@ -133,7 +133,7 @@ def validate_setup():
     
     # Check templates
     templates_dir = Path('templates')
-    required_templates = ['index.html', 'results.html']
+    required_templates = ['index.html', 'result.html']
     
     for template in required_templates:
         if not (templates_dir / template).exists():

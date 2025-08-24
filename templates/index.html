@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attention Optimization AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" onerror="console.error('HTMX failed to load')"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
@@ -23,13 +23,19 @@
                         <p class="text-slate-300">AI-powered landing page analysis</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-2 px-3 py-1 bg-green-500/20 rounded-lg">
                         <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                         <span class="text-sm">
                             {% if openai_available %}Ready{% else %}Setup Required{% endif %}
                         </span>
                     </div>
+                    <a href="/debug" class="text-blue-400 hover:text-blue-300 text-sm px-3 py-1 bg-blue-500/20 rounded-lg">
+                        🔧 Debug Forms
+                    </a>
+                    <a href="/simple-test" class="text-green-400 hover:text-green-300 text-sm px-3 py-1 bg-green-500/20 rounded-lg">
+                        🧪 Simple Test
+                    </a>
                 </div>
             </div>
         </div>
@@ -92,7 +98,9 @@
                       hx-swap="innerHTML"
                       hx-indicator="#loading"
                       enctype="multipart/form-data" 
-                      class="space-y-6">
+                      class="space-y-6"
+                      action="/analyze"
+                      method="post">
                     
                     <!-- URL Input -->
                     <div>
@@ -116,18 +124,19 @@
                     <!-- File Upload -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Upload Screenshot</label>
-                        <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors">
+                        <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors relative">
                             <input type="file" 
                                    name="file" 
                                    accept="image/*"
-                                   class="hidden" 
-                                   id="file-input">
-                            <label for="file-input" class="cursor-pointer">
+                                   id="file-input"
+                                   class="w-full h-full opacity-0 absolute inset-0 cursor-pointer">
+                            <div class="pointer-events-none">
                                 <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3"></i>
                                 <div class="text-slate-300">Click to upload or drag and drop</div>
                                 <div class="text-sm text-slate-500">PNG, JPG, WebP up to 10MB</div>
-                            </label>
+                            </div>
                         </div>
+                        <div id="file-preview" class="mt-2 text-sm text-slate-400"></div>
                     </div>
 
                     <!-- Settings -->
@@ -157,6 +166,13 @@
                             class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
                         <i class="fas fa-magic"></i>
                         <span>Analyze with AI</span>
+                    </button>
+                    
+                    <!-- Debug Button -->
+                    <button type="button" 
+                            onclick="testFormSubmission()"
+                            class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        🔧 Test Form (Debug)
                     </button>
                 </form>
             </div>
@@ -234,6 +250,13 @@
             </div>
         </div>
 
+        <!-- Debug Info (hidden by default) -->
+        <div id="debug-info" class="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs hidden">
+            <div>HTMX: <span id="htmx-status">Checking...</span></div>
+            <div>Form: <span id="form-status">Checking...</span></div>
+            <div>Inputs: <span id="inputs-status">Checking...</span></div>
+        </div>
+
         <!-- Results Container -->
         <div id="results" class="mt-12"></div>
     </main>
@@ -249,18 +272,168 @@
     </footer>
 
     <script>
-        // File upload preview
-        document.getElementById('file-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const label = e.target.nextElementSibling;
-                label.innerHTML = `
-                    <i class="fas fa-check-circle text-3xl text-green-400 mb-3"></i>
-                    <div class="text-green-300">${file.name}</div>
-                    <div class="text-sm text-slate-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                `;
+        // File upload preview and form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('file-input');
+            const filePreview = document.getElementById('file-preview');
+            const urlInput = document.querySelector('input[name="url"]');
+            const form = document.querySelector('form');
+            
+            // File upload preview
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    filePreview.innerHTML = `
+                        <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                        <span class="text-green-300">${file.name}</span>
+                        <span class="text-slate-500 ml-2">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    `;
+                } else {
+                    filePreview.innerHTML = '';
+                }
+            });
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                const hasUrl = urlInput.value.trim() !== '';
+                const hasFile = fileInput.files && fileInput.files.length > 0;
+                
+                if (!hasUrl && !hasFile) {
+                    e.preventDefault();
+                    alert('Please provide either a URL or upload an image file.');
+                    return false;
+                }
+                
+                if (hasUrl && hasFile) {
+                    if (!confirm('You have provided both a URL and a file. The file will take precedence. Continue?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+            
+            // URL input validation
+            urlInput.addEventListener('input', function(e) {
+                const url = e.target.value.trim();
+                if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                    e.target.setCustomValidity('Please enter a valid URL starting with http:// or https://');
+                } else {
+                    e.target.setCustomValidity('');
+                }
+            });
+            
+            // Test if inputs are working
+            console.log('Form inputs found:', {
+                urlInput: urlInput ? 'Found' : 'Missing',
+                fileInput: fileInput ? 'Found' : 'Missing',
+                form: form ? 'Found' : 'Missing'
+            });
+            
+            // Update debug info
+            const debugInfo = document.getElementById('debug-info');
+            const htmxStatus = document.getElementById('htmx-status');
+            const formStatus = document.getElementById('form-status');
+            const inputsStatus = document.getElementById('inputs-status');
+            
+            if (htmxStatus) htmxStatus.textContent = typeof htmx !== 'undefined' ? '✅ Available' : '❌ Missing';
+            if (formStatus) formStatus.textContent = form ? '✅ Found' : '❌ Missing';
+            if (inputsStatus) inputsStatus.textContent = `${urlInput ? '1' : '0'}/${fileInput ? '1' : '0'} inputs`;
+            
+            // Show debug info on double-click
+            document.addEventListener('dblclick', function() {
+                debugInfo.classList.toggle('hidden');
+            });
+            
+            // Test HTMX functionality
+            if (typeof htmx !== 'undefined') {
+                console.log('HTMX is available');
+                htmx.on('htmx:beforeRequest', function(evt) {
+                    console.log('HTMX request starting:', evt.detail);
+                });
+                htmx.on('htmx:responseError', function(evt) {
+                    console.error('HTMX error:', evt.detail);
+                });
+            } else {
+                console.error('HTMX is not available - form will fall back to traditional submission');
             }
         });
+        
+        // Test form submission function
+        function testFormSubmission() {
+            const urlInput = document.querySelector('input[name="url"]');
+            const fileInput = document.getElementById('file-input');
+            const form = document.querySelector('form');
+            
+            console.log('=== FORM TEST ===');
+            console.log('URL Input:', urlInput ? urlInput.value : 'Not found');
+            console.log('File Input:', fileInput ? (fileInput.files[0] ? fileInput.files[0].name : 'No file') : 'Not found');
+            console.log('Form:', form ? 'Found' : 'Not found');
+            console.log('Form action:', form ? form.action : 'N/A');
+            console.log('Form method:', form ? form.method : 'N/A');
+            console.log('Form enctype:', form ? form.enctype : 'N/A');
+            
+            // Test form validation
+            if (form) {
+                const isValid = form.checkValidity();
+                console.log('Form valid:', isValid);
+                
+                if (!isValid) {
+                    form.reportValidity();
+                }
+            }
+            
+            // Test HTMX
+            if (typeof htmx !== 'undefined') {
+                console.log('HTMX available, testing...');
+                const htmxForm = document.querySelector('[hx-post]');
+                console.log('HTMX form found:', !!htmxForm);
+            }
+            
+            alert('Check browser console for form test results');
+        }
+        
+        // Fallback form submission if HTMX fails
+        function setupFormFallback() {
+            const form = document.querySelector('form');
+            if (!form) return;
+            
+            // Remove HTMX attributes to use traditional submission
+            form.removeAttribute('hx-post');
+            form.removeAttribute('hx-target');
+            form.removeAttribute('hx-swap');
+            form.removeAttribute('hx-indicator');
+            
+            // Add traditional form handling
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const url = formData.get('url');
+                const file = formData.get('file');
+                
+                if (!url && !file) {
+                    alert('Please provide either a URL or upload an image file.');
+                    return;
+                }
+                
+                // Show loading state
+                const loading = document.getElementById('loading');
+                if (loading) loading.classList.remove('htmx-indicator');
+                
+                // Submit form traditionally
+                form.submit();
+            });
+            
+            console.log('Form fallback mode activated - using traditional submission');
+        }
+        
+        // Check if HTMX loaded successfully, if not use fallback
+        setTimeout(function() {
+            if (typeof htmx === 'undefined') {
+                console.warn('HTMX not available, using form fallback');
+                setupFormFallback();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
