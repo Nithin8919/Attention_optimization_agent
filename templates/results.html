@@ -1,223 +1,737 @@
-<!-- Results Section -->
-<div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8 mb-8">
-  <!-- Success Header -->
-  <div class="flex items-center justify-center space-x-4 mb-8 p-6 bg-green-500/20 rounded-xl border border-green-500/30">
-      <div class="w-12 h-12 bg-green-500/30 rounded-full flex items-center justify-center">
-          <i class="fas fa-check-circle text-2xl text-green-400"></i>
-      </div>
-      <div class="text-center">
-          <h2 class="text-2xl font-bold text-green-300">Analysis Complete!</h2>
-          <p class="text-green-200">Your landing page has been analyzed with AI</p>
-      </div>
-  </div>
+<div class="comparison-layout">
+    <!-- Comparison Images Section -->
+    <div class="images-comparison">
+        <div class="comparison-header">
+            <h2>🔄 Attention Flow Comparison</h2>
+            <p>Current performance vs. optimized potential</p>
+        </div>
+        
+        <div class="images-grid">
+            <!-- Current Image -->
+            <div class="image-container">
+                <div class="image-label current">
+                    <i class="fas fa-eye"></i>
+                    Current Attention Pattern
+                    <span class="score">{{ "%.0f"|format(metrics.current_score) }}/100</span>
+                </div>
+                <img src="{{ current_image_url }}" alt="Current Attention Analysis" class="comparison-image">
+                <div class="image-insights">
+                    <div class="insight-item">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>{{ analysis.current_analysis.attention_summary }}</span>
+                    </div>
+                </div>
+            </div>
 
-  <!-- Metrics Row -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="bg-black/20 rounded-xl p-4 text-center border border-white/10">
-          <div class="text-2xl font-bold text-blue-400">{{ metrics.num_ctas }}</div>
-          <div class="text-sm text-slate-400">CTAs Found</div>
-      </div>
-      <div class="bg-black/20 rounded-xl p-4 text-center border border-white/10">
-          <div class="text-2xl font-bold text-purple-400">{{ "%.1f"|format(metrics.confidence * 100) }}%</div>
-          <div class="text-sm text-slate-400">AI Confidence</div>
-      </div>
-      <div class="bg-black/20 rounded-xl p-4 text-center border border-white/10">
-          <div class="text-2xl font-bold text-yellow-400">{{ metrics.avg_saliency }}</div>
-          <div class="text-sm text-slate-400">Avg Attention</div>
-      </div>
-      <div class="bg-black/20 rounded-xl p-4 text-center border border-white/10">
-          <div class="text-2xl font-bold text-green-400">{{ metrics.processing_time }}s</div>
-          <div class="text-sm text-slate-400">Processing Time</div>
-      </div>
-  </div>
+            <!-- Optimized Image -->
+            <div class="image-container">
+                <div class="image-label optimized">
+                    <i class="fas fa-target"></i>
+                    Optimized Attention Pattern
+                    <span class="score">{{ "%.0f"|format(metrics.potential_score) }}/100</span>
+                </div>
+                <img src="{{ optimized_image_url }}" alt="Optimized Attention Analysis" class="comparison-image">
+                <div class="image-insights">
+                    <div class="insight-item">
+                        <i class="fas fa-bullseye"></i>
+                        <span>{{ analysis.optimized_analysis.attention_summary }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <!-- Main Result Image -->
-  <div class="mb-8">
-      <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold flex items-center space-x-2">
-              <i class="fas fa-image text-red-400"></i>
-              <span>Attention Heatmap Analysis</span>
-          </h3>
-          <div class="flex space-x-2">
-              <a href="/download/{{ run_id }}/png" 
-                 class="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 transition-colors flex items-center space-x-2">
-                  <i class="fas fa-download text-sm"></i>
-                  <span>Download PNG</span>
-              </a>
-              <a href="/download/{{ run_id }}/json" 
-                 class="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg border border-purple-500/30 transition-colors flex items-center space-x-2">
-                  <i class="fas fa-code text-sm"></i>
-                  <span>Download JSON</span>
-              </a>
-          </div>
-      </div>
-      
-      <div class="bg-black/30 rounded-xl p-4 border border-white/10">
-          <img src="{{ image_url }}" 
-               alt="Attention Analysis Result" 
-               class="w-full rounded-lg shadow-2xl">
-          
-          <!-- Legend -->
-          <div class="mt-4 flex flex-wrap items-center justify-center space-x-6 text-sm">
-              <div class="flex items-center space-x-2">
-                  <div class="w-4 h-4 bg-red-500/60 rounded"></div>
-                  <span class="text-slate-300">High Attention Areas</span>
-              </div>
-              <div class="flex items-center space-x-2">
-                  <div class="w-4 h-4 border-2 border-green-500 rounded"></div>
-                  <span class="text-slate-300">Call-to-Action Elements</span>
-              </div>
-              <div class="flex items-center space-x-2">
-                  <div class="w-4 h-4 bg-yellow-500/60 rounded"></div>
-                  <span class="text-slate-300">Medium Attention</span>
-              </div>
-          </div>
-      </div>
-  </div>
+        <!-- Improvement Potential -->
+        <div class="improvement-highlight">
+            <div class="improvement-card">
+                <div class="improvement-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="improvement-content">
+                    <h3>Improvement Potential</h3>
+                    <div class="improvement-score">+{{ "%.0f"|format(metrics.improvement_potential) }}%</div>
+                    <p>Expected conversion rate increase with optimizations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights Section -->
+    <div class="insights-section">
+        <!-- Performance Metrics -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Performance Comparison
+                </div>
+            </div>
+
+                <div class="metric-comparison">
+                    <div class="metric-label">Current Score</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill current" style="width: {{ metrics.current_score }}%"></div>
+                        <span class="bar-value">{{ "%.0f"|format(metrics.current_score) }}/100</span>
+                    </div>
+                </div>
+                
+                <div class="metric-comparison">
+                    <div class="metric-label">Potential Score</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill optimized" style="width: {{ metrics.potential_score }}%"></div>
+                        <span class="bar-value">{{ "%.0f"|format(metrics.potential_score) }}/100</span>
+                    </div>
+                </div>
+                
+                <div class="metric-comparison">
+                    <div class="metric-label">Attention Flow</div>
+                    <div class="flow-comparison">
+                        <div class="flow-item">
+                            <span>Current:</span>
+                            <span class="flow-score current">{{ "%.0f"|format(metrics.current_flow_score * 100) }}%</span>
+                        </div>
+                        <div class="flow-item">
+                            <span>Optimized:</span>
+                            <span class="flow-score optimized">{{ "%.0f"|format(metrics.optimized_flow_score * 100) }}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-comparison">
+                    <div class="metric-label">CTA Saliency</div>
+                    <div class="flow-comparison">
+                        <div class="flow-item">
+                            <span>Current:</span>
+                            <span class="flow-score current">{{ "%.0f"|format(metrics.avg_current_saliency * 100) }}%</span>
+                        </div>
+                        <div class="flow-item">
+                            <span>Optimized:</span>
+                            <span class="flow-score optimized">{{ "%.0f"|format(metrics.avg_optimized_saliency * 100) }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Position Comparison -->
+        {% if analysis.ctas %}
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-mouse-pointer"></i>
+                    CTA Position Optimization
+                </div>
+            </div>
+
+            {% for cta in analysis.ctas %}
+            <div class="cta-comparison-item">
+                <div class="cta-header">
+                    <h4>🎯 "{{ cta.text }}"</h4>
+                    <span class="priority-badge priority-{{ cta.priority }}">Priority {{ cta.priority }}</span>
+                </div>
+                
+                <div class="position-comparison">
+                    <div class="position-item current">
+                        <div class="position-label">Current Position</div>
+                        <div class="saliency-score">{{ "%.0f"|format(cta.current_saliency * 100) }}% Saliency</div>
+                    </div>
+                    
+                    <div class="position-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    
+                    <div class="position-item optimized">
+                        <div class="position-label">Optimized Position</div>
+                        <div class="saliency-score">{{ "%.0f"|format(cta.optimized_saliency * 100) }}% Saliency</div>
+                        <div class="improvement-gain">+{{ "%.0f"|format((cta.optimized_saliency - cta.current_saliency) * 100) }}%</div>
+                    </div>
+                </div>
+                
+                <div class="position-reasoning">
+                    <strong>Why this change:</strong>
+                    <p>{{ cta.position_change_reason }}</p>
+                </div>
+                
+                {% if cta.issues %}
+                <div class="cta-issues">
+                    <strong>Current Issues:</strong>
+                    <ul>
+                        {% for issue in cta.issues %}
+                        <li>{{ issue }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if cta.improvements %}
+                <div class="cta-improvements">
+                    <strong>Recommended Improvements:</strong>
+                    <ul>
+                        {% for improvement in cta.improvements %}
+                        <li>{{ improvement }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Detailed Improvement Suggestions -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Detailed Improvement Plan
+                </div>
+            </div>
+
+            <div class="improvements-list">
+                {% for suggestion in analysis.improvement_suggestions %}
+                <div class="improvement-item">
+                    <div class="improvement-header">
+                        <div class="category-badge category-{{ suggestion.category|lower|replace(' ', '-') }}">
+                            {{ suggestion.category }}
+                        </div>
+                        <div class="effort-badge effort-{{ suggestion.implementation_effort|lower }}">
+                            {{ suggestion.implementation_effort }} Effort
+                        </div>
+                    </div>
+                    
+                    <div class="improvement-content">
+                        <div class="current-issue">
+                            <strong>Current Issue:</strong>
+                            <p>{{ suggestion.current_issue }}</p>
+                        </div>
+                        
+                        <div class="suggested-change">
+                            <strong>Suggested Change:</strong>
+                            <p>{{ suggestion.suggested_change }}</p>
+                        </div>
+                        
+                        <div class="expected-impact">
+                            <strong>Expected Impact:</strong>
+                            <span class="impact-highlight">{{ suggestion.expected_impact }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Attention Flow Analysis -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-route"></i>
+                    Attention Flow Analysis
+                </div>
+            </div>
+
+            <div class="flow-analysis">
+                <div class="flow-comparison-detailed">
+                    <div class="flow-current">
+                        <h4>Current Flow Pattern</h4>
+                        <div class="flow-pattern">{{ analysis.attention_flow_comparison.current_flow.flow_pattern }}</div>
+                        <div class="flow-effectiveness">
+                            Effectiveness: {{ "%.0f"|format(analysis.attention_flow_comparison.current_flow.effectiveness_score * 100) }}%
+                        </div>
+                    </div>
+                    
+                    <div class="flow-optimized">
+                        <h4>Optimized Flow Pattern</h4>
+                        <div class="flow-pattern">{{ analysis.attention_flow_comparison.optimized_flow.flow_pattern }}</div>
+                        <div class="flow-effectiveness">
+                            Effectiveness: {{ "%.0f"|format(analysis.attention_flow_comparison.optimized_flow.effectiveness_score * 100) }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="insights-card next-steps-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    Implementation Roadmap
+                </div>
+            </div>
+
+            <div class="roadmap">
+                <div class="roadmap-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Quick Wins (This Week)</h4>
+                        <p>Implement high-impact, low-effort changes first</p>
+                        <ul class="step-actions">
+                            {% for suggestion in analysis.improvement_suggestions %}
+                                {% if suggestion.implementation_effort|lower == 'low' %}
+                                <li>{{ suggestion.suggested_change }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="roadmap-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Medium Changes (Next 2 Weeks)</h4>
+                        <p>Implement moderate effort improvements</p>
+                        <ul class="step-actions">
+                            {% for suggestion in analysis.improvement_suggestions %}
+                                {% if suggestion.implementation_effort|lower == 'medium' %}
+                                <li>{{ suggestion.suggested_change }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="roadmap-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Strategic Changes (Next Month)</h4>
+                        <p>Plan and execute major redesign elements</p>
+                        <ul class="step-actions">
+                            {% for suggestion in analysis.improvement_suggestions %}
+                                {% if suggestion.implementation_effort|lower == 'high' %}
+                                <li>{{ suggestion.suggested_change }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="roadmap-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Measure & Iterate</h4>
+                        <p>Track results and continuously optimize</p>
+                        <ul class="step-actions">
+                            <li>Set up conversion tracking</li>
+                            <li>Run A/B tests on key changes</li>
+                            <li>Re-analyze after implementation</li>
+                            <li>Continue optimization cycle</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Analysis Grid -->
-<div class="grid lg:grid-cols-2 gap-8 mb-8">
-  
-  <!-- CTA Analysis -->
-  <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-      <h3 class="text-xl font-bold mb-4 flex items-center space-x-2">
-          <i class="fas fa-bullseye text-green-400"></i>
-          <span>Call-to-Action Analysis</span>
-      </h3>
-      
-      {% if analysis.ctas %}
-      <div class="space-y-4">
-          {% for cta in analysis.ctas %}
-          <div class="bg-black/20 rounded-lg p-4 border border-white/10">
-              <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center space-x-3">
-                      <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                          {{ loop.index }}
-                      </div>
-                      <div>
-                          <div class="font-semibold text-white">{{ cta.text[:50] }}{% if cta.text|length > 50 %}...{% endif %}</div>
-                          <div class="text-sm text-slate-400">Priority {{ cta.priority }}</div>
-                      </div>
-                  </div>
-                  <div class="text-right">
-                      <div class="text-lg font-bold text-blue-400">{{ "%.2f"|format(cta.saliency) }}</div>
-                      <div class="text-xs text-slate-400">Saliency Score</div>
-                  </div>
-              </div>
-              
-              {% if cta.issues %}
-              <div class="mt-3 flex flex-wrap gap-2">
-                  {% for issue in cta.issues %}
-                  <span class="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-lg border border-red-500/30">
-                      {{ issue }}
-                  </span>
-                  {% endfor %}
-              </div>
-              {% endif %}
-          </div>
-          {% endfor %}
-      </div>
-      {% else %}
-      <div class="text-center py-8 text-slate-400">
-          <i class="fas fa-search text-3xl mb-3"></i>
-          <p>No CTAs detected in this analysis</p>
-      </div>
-      {% endif %}
-  </div>
-
-  <!-- Optimization Suggestions -->
-  <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-      <h3 class="text-xl font-bold mb-4 flex items-center space-x-2">
-          <i class="fas fa-lightbulb text-yellow-400"></i>
-          <span>AI Recommendations</span>
-      </h3>
-      
-      <div class="space-y-3">
-          {% for suggestion in analysis.suggestions %}
-          <div class="flex items-start space-x-3 p-3 bg-black/20 rounded-lg border border-white/10">
-              <div class="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center mt-0.5">
-                  <i class="fas fa-arrow-up text-yellow-400 text-sm"></i>
-              </div>
-              <div class="flex-1">
-                  <p class="text-slate-200">{{ suggestion }}</p>
-              </div>
-          </div>
-          {% endfor %}
-      </div>
-  </div>
+<!-- Download Actions -->
+<div class="download-section">
+    <div class="download-header">
+        <h3>📥 Download Your Analysis</h3>
+        <p>Get high-quality images and data for your team</p>
+    </div>
+    
+    <div class="download-grid">
+        <a href="/download/{{ run_id }}?format=current" class="download-card" download>
+            <div class="download-icon current">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="download-info">
+                <h4>Current Analysis</h4>
+                <p>High-res PNG of current attention pattern</p>
+            </div>
+        </a>
+        
+        <a href="/download/{{ run_id }}?format=optimized" class="download-card" download>
+            <div class="download-icon optimized">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="download-info">
+                <h4>Optimized Analysis</h4>
+                <p>High-res PNG of optimized attention pattern</p>
+            </div>
+        </a>
+        
+        <a href="/download/{{ run_id }}?format=json" class="download-card" download>
+            <div class="download-icon data">
+                <i class="fas fa-code"></i>
+            </div>
+            <div class="download-info">
+                <h4>Raw Data</h4>
+                <p>Complete JSON analysis data</p>
+            </div>
+        </a>
+        
+        <button onclick="window.print()" class="download-card print-card">
+            <div class="download-icon print">
+                <i class="fas fa-print"></i>
+            </div>
+            <div class="download-info">
+                <h4>Print Report</h4>
+                <p>Professional PDF report</p>
+            </div>
+        </button>
+    </div>
 </div>
 
-<!-- Detailed Metrics -->
-<div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 mb-8">
-  <h3 class="text-xl font-bold mb-4 flex items-center space-x-2">
-      <i class="fas fa-chart-area text-purple-400"></i>
-      <span>Attention Heatmap Data</span>
-  </h3>
-  
-  <div class="grid lg:grid-cols-3 gap-6">
-      <!-- Heatmap Preview -->
-      <div class="lg:col-span-2">
-          <h4 class="font-semibold mb-3 text-slate-300">Saliency Grid Visualization</h4>
-          <div class="bg-black/30 rounded-lg p-4 border border-white/10">
-              <div class="grid gap-1" style="grid-template-columns: repeat({{ analysis.saliency_grid[0]|length }}, 1fr);">
-                  {% for row in analysis.saliency_grid %}
-                      {% for cell in row %}
-                      <div class="aspect-square rounded-sm" 
-                           style="background-color: rgba(255, 0, 0, {{ cell * 0.7 }});"
-                           title="Attention Score: {{ "%.3f"|format(cell) }}">
-                      </div>
-                      {% endfor %}
-                  {% endfor %}
-              </div>
-          </div>
-          <div class="mt-2 text-xs text-slate-400 text-center">
-              Grid: {{ analysis.saliency_grid|length }}×{{ analysis.saliency_grid[0]|length }} cells
-          </div>
-      </div>
-      
-      <!-- Statistics -->
-      <div>
-          <h4 class="font-semibold mb-3 text-slate-300">Statistics</h4>
-          <div class="space-y-3">
-              <div class="bg-black/20 rounded-lg p-3 border border-white/10">
-                  <div class="text-sm text-slate-400">Grid Size</div>
-                  <div class="font-bold">{{ analysis.saliency_grid|length }}×{{ analysis.saliency_grid[0]|length }}</div>
-              </div>
-              <div class="bg-black/20 rounded-lg p-3 border border-white/10">
-                  <div class="text-sm text-slate-400">Total CTAs</div>
-                  <div class="font-bold">{{ analysis.ctas|length }}</div>
-              </div>
-              <div class="bg-black/20 rounded-lg p-3 border border-white/10">
-                  <div class="text-sm text-slate-400">AI Confidence</div>
-                  <div class="font-bold">{{ "%.1f"|format(analysis.confidence * 100) }}%</div>
-              </div>
-              <div class="bg-black/20 rounded-lg p-3 border border-white/10">
-                  <div class="text-sm text-slate-400">Processing Time</div>
-                  <div class="font-bold">{{ metrics.processing_time }}s</div>
-              </div>
-          </div>
-      </div>
-  </div>
+<div class="action-footer">
+    <button onclick="window.location.reload()" class="btn btn-primary">
+        <i class="fas fa-redo"></i>
+        Analyze Another Page
+    </button>
 </div>
 
-<!-- Action Buttons -->
-<div class="flex flex-wrap items-center justify-center gap-4">
-  <button onclick="window.location.reload()" 
-          class="px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 transition-colors flex items-center space-x-2">
-      <i class="fas fa-redo"></i>
-      <span>Analyze Another Page</span>
-  </button>
-  
-  <button onclick="window.print()" 
-          class="px-6 py-3 bg-green-500/20 hover:bg-green-500/30 rounded-lg border border-green-500/30 transition-colors flex items-center space-x-2">
-      <i class="fas fa-print"></i>
-      <span>Print Report</span>
-  </button>
-  
-  <a href="/download/{{ run_id }}/png" 
-     class="px-6 py-3 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg border border-purple-500/30 transition-colors flex items-center space-x-2">
-      <i class="fas fa-download"></i>
-      <span>Download Results</span>
-  </a>
+<script>
+    // Reset form state
+    document.body.classList.remove('loading');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    if (analyzeBtn) {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Analyze with AI</span>';
+    }
+
+    // Animate the comparison reveal
+    const comparisonImages = document.querySelectorAll('.image-container');
+    const insightCards = document.querySelectorAll('.insights-card');
+    
+    // Animate images first
+    comparisonImages.forEach((img, index) => {
+        img.style.opacity = '0';
+        img.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            img.style.transition = 'all 0.8s ease';
+            img.style.opacity = '1';
+            img.style.transform = 'translateY(0)';
+        }, index * 300);
+    });
+    
+    // Then animate insight cards
+    insightCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateX(0)';
+        }, 600 + (index * 150));
+    });
+
+    // Animate progress bars
+    setTimeout(() => {
+        const progressBars = document.querySelectorAll('.bar-fill');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.transition = 'width 1.5s ease-out';
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 1000);
+
+    // Scroll to results
+    setTimeout(() => {
+        document.querySelector('.comparison-layout').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }, 400);
+</script><div class="results-layout">
+    <!-- Image Column -->
+    <div class="image-column">
+        <div class="image-header">
+            <div class="image-title">
+                <i class="fas fa-chart-line"></i>
+                Attention Analysis
+            </div>
+            <div class="score-badge {% if metrics.overall_score >= 80 %}high{% elif metrics.overall_score >= 60 %}medium{% else %}low{% endif %}">
+                {{ "%.0f"|format(metrics.overall_score) }}/100
+            </div>
+        </div>
+
+        <img src="{{ image_url }}" alt="Attention Analysis Results" class="result-image">
+
+        <div class="image-legend">
+            <div class="legend-title">🎯 Heatmap Legend</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #3b82f6, #1e40af);"></div>
+                    <span>Low attention areas</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #10b981, #059669);"></div>
+                    <span>Medium attention zones</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #f59e0b, #d97706);"></div>
+                    <span>High attention areas</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #ef4444, #dc2626);"></div>
+                    <span>Critical attention points</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(45deg, #8b5cf6, #7c3aed); border: 2px solid #ffd700;"></div>
+                    <span>Primary focus area</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="download-actions">
+            <a href="/download/{{ run_id }}?format=png" class="btn btn-secondary" download>
+                <i class="fas fa-download"></i>
+                Download Image
+            </a>
+            <a href="/download/{{ run_id }}?format=json" class="btn btn-secondary" download>
+                <i class="fas fa-code"></i>
+                Download Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Insights Column -->
+    <div class="insights-column">
+        <!-- Key Metrics -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Performance Metrics
+                </div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-value">{{ metrics.num_ctas }}</span>
+                    <span class="metric-label">CTAs Found</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value">{{ "%.0f"|format(metrics.avg_saliency * 100) }}%</span>
+                    <span class="metric-label">Avg Saliency</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value">{{ "%.0f"|format(metrics.flow_score * 100) }}%</span>
+                    <span class="metric-label">Flow Score</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value">{{ "%.1f"|format(metrics.total_contrast) }}</span>
+                    <span class="metric-label">Avg Contrast</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value">{{ "%.0f"|format(metrics.confidence * 100) }}%</span>
+                    <span class="metric-label">AI Confidence</span>
+                </div>
+            </div>
+
+            {% if metrics.primary_cta %}
+            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 15px; margin-top: 1rem;">
+                <strong>🎯 Primary CTA:</strong> "{{ metrics.primary_cta.text }}" 
+                <br><small>Saliency: {{ "%.0f"|format(metrics.primary_cta.saliency * 100) }}% | Priority: {{ metrics.primary_cta.priority }}</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Wins -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Wins
+                    <small style="color: var(--success); font-size: 0.9rem; font-weight: normal;">(Easy • High Impact)</small>
+                </div>
+            </div>
+
+            <ul class="suggestions-list">
+                {% for suggestion in analysis.quick_wins %}
+                <li class="suggestion-item">
+                    <div class="suggestion-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="suggestion-text">{{ suggestion }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Major Improvements -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-rocket"></i>
+                    Strategic Improvements
+                    <small style="color: var(--warning); font-size: 0.9rem; font-weight: normal;">(Medium Effort • High Impact)</small>
+                </div>
+            </div>
+
+            <ul class="suggestions-list">
+                {% for improvement in analysis.major_improvements %}
+                <li class="suggestion-item major">
+                    <div class="suggestion-icon major">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="suggestion-text">{{ improvement }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- CTA Analysis -->
+        {% if analysis.ctas %}
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-mouse-pointer"></i>
+                    CTA Performance Analysis
+                </div>
+            </div>
+
+            {% for cta in analysis.ctas %}
+            <div class="ab-test-item" style="margin-bottom: 1rem;">
+                <div class="test-title">
+                    🎯 "{{ cta.text }}"
+                    <span class="difficulty-badge difficulty-{% if cta.priority <= 2 %}easy{% elif cta.priority <= 3 %}medium{% else %}hard{% endif %}">
+                        Priority {{ cta.priority }}
+                    </span>
+                </div>
+                
+                <div class="metrics-grid" style="margin-bottom: 1rem;">
+                    <div class="metric-item">
+                        <span class="metric-value">{{ "%.0f"|format(cta.saliency * 100) }}%</span>
+                        <span class="metric-label">Saliency</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">{{ "%.1f"|format(cta.contrast) }}</span>
+                        <span class="metric-label">Contrast</span>
+                    </div>
+                </div>
+
+                {% if cta.issues %}
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <strong style="color: var(--error);">⚠️ Issues:</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--error);">
+                        {% for issue in cta.issues %}
+                        <li>{{ issue }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 10px;">
+                    <strong style="color: var(--success);">💡 Improvement:</strong>
+                    <p style="margin: 0.5rem 0; color: var(--success);">{{ cta.improvement }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- A/B Test Ideas -->
+        <div class="insights-card">
+            <div class="insights-header">
+                <div class="insights-title">
+                    <i class="fas fa-flask"></i>
+                    A/B Test Recommendations
+                </div>
+            </div>
+
+            <div class="ab-tests-list">
+                {% for test in analysis.ab_tests %}
+                <div class="ab-test-item">
+                    <div class="test-title">
+                        🧪 {{ test.title }}
+                        <span class="difficulty-badge difficulty-{{ test.difficulty|lower }}">
+                            {{ test.difficulty }} 
+                        </span>
+                    </div>
+                    
+                    <div class="test-hypothesis">
+                        "{{ test.hypothesis }}"
+                    </div>
+                    
+                    <div class="test-variants">
+                        <div class="variant">
+                            <span class="variant-label">Variant A (Control)</span>
+                            {{ test.variant_a }}
+                        </div>
+                        <div class="variant">
+                            <span class="variant-label">Variant B (Test)</span>
+                            {{ test.variant_b }}
+                        </div>
+                    </div>
+                    
+                    <div class="test-meta">
+                        <span><strong>Expected Lift:</strong> {{ test.expected_lift }}</span>
+                        <span><strong>Difficulty:</strong> {{ test.difficulty }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Action Items -->
+        <div class="insights-card" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+            <div class="insights-header">
+                <div class="insights-title" style="color: white;">
+                    <i class="fas fa-clipboard-check"></i>
+                    Next Steps
+                </div>
+            </div>
+
+            <div style="font-size: 1.1rem; line-height: 1.6;">
+                <p style="margin-bottom: 1rem;">
+                    <strong>Your page scored {{ "%.0f"|format(metrics.overall_score) }}/100.</strong> 
+                    {% if metrics.overall_score >= 80 %}
+                    Excellent! Focus on fine-tuning and testing.
+                    {% elif metrics.overall_score >= 60 %}
+                    Good foundation. Implement the quick wins first.
+                    {% else %}
+                    Significant improvement potential. Start with structural changes.
+                    {% endif %}
+                </p>
+
+                <ol style="padding-left: 1.5rem;">
+                    <li>✅ Implement 2-3 quick wins this week</li>
+                    <li>🚀 Plan strategic improvements for next sprint</li>
+                    <li>🧪 Set up A/B tests for highest-impact changes</li>
+                    <li>📊 Measure conversion rate impact</li>
+                    <li>🔄 Re-analyze after implementation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid var(--gray-200);">
+    <button onclick="window.location.reload()" class="btn">
+        <i class="fas fa-redo"></i>
+        Analyze Another Page
+    </button>
+</div>
+
+<script>
+    // Reset form state
+    document.body.classList.remove('loading');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    if (analyzeBtn) {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Analyze with AI</span>';
+    }
+
+    // Add smooth reveal animation
+    const cards = document.querySelectorAll('.insights-card, .image-column');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+
+    // Scroll to results smoothly
+    setTimeout(() => {
+        document.querySelector('.results-layout').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }, 300);
+</script>

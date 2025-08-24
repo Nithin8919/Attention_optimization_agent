@@ -3,437 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attention Optimization AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.12" onerror="console.error('HTMX failed to load')"></script>
+    <title>🎯 Attention Optimization AI - Professional CRO Analysis</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
-    
-    <!-- Header -->
-    <header class="bg-black/20 backdrop-blur-sm border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-eye text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold">Attention Optimization AI</h1>
-                        <p class="text-slate-300">AI-powered landing page analysis</p>
-                    </div>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>🎯 Attention Optimization AI</h1>
+            <p class="hero-subtitle">Professional CRO & UX Analysis powered by OpenAI Vision</p>
+            
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <i class="fas fa-eye"></i>
+                    <h3>Advanced Heatmaps</h3>
+                    <p>Professional attention flow visualization</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2 px-3 py-1 bg-green-500/20 rounded-lg">
-                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span class="text-sm">
-                            {% if openai_available %}Ready{% else %}Setup Required{% endif %}
-                        </span>
-                    </div>
-                    <a href="/debug" class="text-blue-400 hover:text-blue-300 text-sm px-3 py-1 bg-blue-500/20 rounded-lg">
-                        🔧 Debug Forms
-                    </a>
-                    <a href="/simple-test" class="text-green-400 hover:text-green-300 text-sm px-3 py-1 bg-green-500/20 rounded-lg">
-                        🧪 Simple Test
-                    </a>
+                <div class="hero-feature">
+                    <i class="fas fa-bullseye"></i>
+                    <h3>CTA Analysis</h3>
+                    <p>Detailed button performance insights</p>
+                </div>
+                <div class="hero-feature">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Smart Recommendations</h3>
+                    <p>AI-powered optimization suggestions</p>
+                </div>
+                <div class="hero-feature">
+                    <i class="fas fa-flask"></i>
+                    <h3>A/B Test Ideas</h3>
+                    <p>Ready-to-implement test hypotheses</p>
                 </div>
             </div>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        
-        <!-- Hero Section -->
-        <div class="text-center mb-12">
-            <h2 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Transform Your Landing Pages
-            </h2>
-            <p class="text-xl text-slate-300 max-w-3xl mx-auto">
-                Get AI-powered attention heatmaps, CTA analysis, and optimization recommendations to boost your conversion rates.
-            </p>
-        </div>
-
-        <!-- Status Alerts -->
-        {% if not openai_available %}
-        <div class="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 mb-8">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-exclamation-triangle text-amber-400"></i>
-                <div>
-                    <h4 class="font-semibold text-amber-200">OpenAI Setup Required</h4>
-                    <p class="text-amber-300">Set your OPENAI_API_KEY environment variable to enable AI analysis.</p>
-                </div>
+        <!-- Status Messages -->
+        {% if not status.openai_available %}
+        <div class="status-card error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>OpenAI API Key Required</strong>
+                <p>Set your OPENAI_API_KEY environment variable to enable AI analysis.</p>
             </div>
         </div>
         {% endif %}
 
-        {% if not playwright_available %}
-        <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 mb-8">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-info-circle text-blue-400"></i>
-                <div>
-                    <h4 class="font-semibold text-blue-200">URL Screenshots Disabled</h4>
-                    <p class="text-blue-300">Install Playwright to enable URL analysis: <code class="bg-black/30 px-2 py-1 rounded">pip install playwright && playwright install</code></p>
-                </div>
+        {% if not status.playwright_available %}
+        <div class="status-card warning">
+            <i class="fas fa-camera"></i>
+            <div>
+                <strong>Screenshot Feature Limited</strong>
+                <p>Install Playwright for URL screenshots: <code>pip install playwright && playwright install chromium</code></p>
             </div>
         </div>
         {% endif %}
 
         <!-- Analysis Form -->
-        <div class="grid lg:grid-cols-2 gap-8">
-            
-            <!-- Form Card -->
-            <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-upload text-blue-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold">Start Analysis</h3>
-                        <p class="text-slate-400">Enter URL or upload image</p>
+        <div class="form-card">
+            <div class="form-header">
+                <h2>Start Your Analysis</h2>
+                <p>Upload an image or enter a URL to get professional CRO insights in seconds</p>
+            </div>
+
+            <form id="analysis-form" method="post" action="/analyze" enctype="multipart/form-data">
+                <!-- URL Input -->
+                <div class="form-section">
+                    <h3><i class="fas fa-link"></i> Analyze Website URL</h3>
+                    <div class="form-group">
+                        <label for="url">🌐 Landing Page URL</label>
+                        <input type="url" id="url" name="url" class="form-input" 
+                               placeholder="https://your-landing-page.com">
                     </div>
                 </div>
 
-                <form hx-post="/analyze" 
-                      hx-target="#results" 
-                      hx-swap="innerHTML"
-                      hx-indicator="#loading"
-                      enctype="multipart/form-data" 
-                      class="space-y-6"
-                      action="/analyze"
-                      method="post">
-                    
-                    <!-- URL Input -->
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Landing Page URL</label>
-                        <input type="url" 
-                               name="url" 
-                               placeholder="https://example.com"
-                               class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
+                <div class="divider">
+                    <span>OR</span>
+                </div>
 
-                    <!-- OR Divider -->
-                    <div class="relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-white/20"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-slate-900 text-slate-400">OR</span>
+                <!-- File Upload -->
+                <div class="form-section">
+                    <h3><i class="fas fa-upload"></i> Upload Screenshot</h3>
+                    <div class="form-group">
+                        <div class="file-upload-area" id="file-upload-area">
+                            <input type="file" id="file" name="file" accept="image/*" style="display: none;">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div class="upload-text">Click to upload or drag & drop</div>
+                            <div class="upload-subtext">PNG, JPEG, WebP • Max 10MB</div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- File Upload -->
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Upload Screenshot</label>
-                        <div class="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors relative">
-                            <input type="file" 
-                                   name="file" 
-                                   accept="image/*"
-                                   id="file-input"
-                                   class="w-full h-full opacity-0 absolute inset-0 cursor-pointer">
-                            <div class="pointer-events-none">
-                                <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3"></i>
-                                <div class="text-slate-300">Click to upload or drag and drop</div>
-                                <div class="text-sm text-slate-500">PNG, JPG, WebP up to 10MB</div>
-                            </div>
-                        </div>
-                        <div id="file-preview" class="mt-2 text-sm text-slate-400"></div>
-                    </div>
-
-                    <!-- Settings -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Grid Rows</label>
-                            <input type="number" 
-                                   name="rows" 
-                                   value="12" 
-                                   min="6" 
-                                   max="24"
-                                   class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Grid Columns</label>
-                            <input type="number" 
-                                   name="cols" 
-                                   value="8" 
-                                   min="6" 
-                                   max="24"
-                                   class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" 
-                            class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                <!-- Submit Button -->
+                <div style="text-align: center; margin-top: 3rem;">
+                    <button type="submit" class="btn" id="analyze-btn">
                         <i class="fas fa-magic"></i>
                         <span>Analyze with AI</span>
                     </button>
-                    
-                    <!-- Debug Button -->
-                    <button type="button" 
-                            onclick="testFormSubmission()"
-                            class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                        🔧 Test Form (Debug)
-                    </button>
-                </form>
-            </div>
-
-            <!-- Preview/Info Card -->
-            <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-chart-line text-purple-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold">What You'll Get</h3>
-                        <p class="text-slate-400">Comprehensive CRO analysis</p>
-                    </div>
                 </div>
-
-                <div class="space-y-4">
-                    <div class="flex items-start space-x-3">
-                        <div class="w-6 h-6 bg-red-500/20 rounded-lg flex items-center justify-center mt-1">
-                            <i class="fas fa-fire text-red-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-red-300">Attention Heatmap</h4>
-                            <p class="text-slate-400 text-sm">Visual overlay showing where users look first</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start space-x-3">
-                        <div class="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center mt-1">
-                            <i class="fas fa-bullseye text-green-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-green-300">CTA Analysis</h4>
-                            <p class="text-slate-400 text-sm">Detailed breakdown of button performance</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start space-x-3">
-                        <div class="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center mt-1">
-                            <i class="fas fa-lightbulb text-blue-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-blue-300">Optimization Tips</h4>
-                            <p class="text-slate-400 text-sm">AI-powered suggestions to boost conversions</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start space-x-3">
-                        <div class="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center mt-1">
-                            <i class="fas fa-download text-yellow-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-yellow-300">Export Options</h4>
-                            <p class="text-slate-400 text-sm">PNG images and JSON data for reports</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Example Preview -->
-                <div class="mt-8 p-4 bg-black/20 rounded-lg border border-white/10">
-                    <div class="text-sm text-slate-400 mb-2">Example Output:</div>
-                    <div class="bg-gradient-to-r from-red-500/20 to-yellow-500/20 h-24 rounded-lg flex items-center justify-center">
-                        <span class="text-xs text-slate-300">Heatmap Visualization</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading Overlay -->
-        <div id="loading" class="htmx-indicator fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20">
-                <div class="animate-spin w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full mx-auto mb-4"></div>
-                <h3 class="text-xl font-bold mb-2">Analyzing with AI...</h3>
-                <p class="text-slate-400">This may take 10-30 seconds</p>
-            </div>
-        </div>
-
-        <!-- Debug Info (hidden by default) -->
-        <div id="debug-info" class="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs hidden">
-            <div>HTMX: <span id="htmx-status">Checking...</span></div>
-            <div>Form: <span id="form-status">Checking...</span></div>
-            <div>Inputs: <span id="inputs-status">Checking...</span></div>
+            </form>
         </div>
 
         <!-- Results Container -->
-        <div id="results" class="mt-12"></div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-16 bg-black/20 backdrop-blur-sm border-t border-white/10 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-slate-400">
-                Powered by OpenAI Vision & Claude AI • 
-                <a href="https://github.com" class="text-blue-400 hover:text-blue-300">View on GitHub</a>
-            </p>
-        </div>
-    </footer>
+        <div id="results"></div>
+    </div>
 
     <script>
-        // File upload preview and form validation
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('file-input');
-            const filePreview = document.getElementById('file-preview');
-            const urlInput = document.querySelector('input[name="url"]');
-            const form = document.querySelector('form');
-            
-            // File upload preview
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    filePreview.innerHTML = `
-                        <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                        <span class="text-green-300">${file.name}</span>
-                        <span class="text-slate-500 ml-2">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    `;
-                } else {
-                    filePreview.innerHTML = '';
-                }
-            });
-            
-            // Form validation
-            form.addEventListener('submit', function(e) {
-                const hasUrl = urlInput.value.trim() !== '';
-                const hasFile = fileInput.files && fileInput.files.length > 0;
-                
-                if (!hasUrl && !hasFile) {
-                    e.preventDefault();
-                    alert('Please provide either a URL or upload an image file.');
-                    return false;
-                }
-                
-                if (hasUrl && hasFile) {
-                    if (!confirm('You have provided both a URL and a file. The file will take precedence. Continue?')) {
-                        e.preventDefault();
-                        return false;
-                    }
-                }
-            });
-            
-            // URL input validation
-            urlInput.addEventListener('input', function(e) {
-                const url = e.target.value.trim();
-                if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-                    e.target.setCustomValidity('Please enter a valid URL starting with http:// or https://');
-                } else {
-                    e.target.setCustomValidity('');
-                }
-            });
-            
-            // Test if inputs are working
-            console.log('Form inputs found:', {
-                urlInput: urlInput ? 'Found' : 'Missing',
-                fileInput: fileInput ? 'Found' : 'Missing',
-                form: form ? 'Found' : 'Missing'
-            });
-            
-            // Update debug info
-            const debugInfo = document.getElementById('debug-info');
-            const htmxStatus = document.getElementById('htmx-status');
-            const formStatus = document.getElementById('form-status');
-            const inputsStatus = document.getElementById('inputs-status');
-            
-            if (htmxStatus) htmxStatus.textContent = typeof htmx !== 'undefined' ? '✅ Available' : '❌ Missing';
-            if (formStatus) formStatus.textContent = form ? '✅ Found' : '❌ Missing';
-            if (inputsStatus) inputsStatus.textContent = `${urlInput ? '1' : '0'}/${fileInput ? '1' : '0'} inputs`;
-            
-            // Show debug info on double-click
-            document.addEventListener('dblclick', function() {
-                debugInfo.classList.toggle('hidden');
-            });
-            
-            // Test HTMX functionality
-            if (typeof htmx !== 'undefined') {
-                console.log('HTMX is available');
-                htmx.on('htmx:beforeRequest', function(evt) {
-                    console.log('HTMX request starting:', evt.detail);
-                });
-                htmx.on('htmx:responseError', function(evt) {
-                    console.error('HTMX error:', evt.detail);
-                });
-            } else {
-                console.error('HTMX is not available - form will fall back to traditional submission');
+        // Form handling
+        const form = document.getElementById('analysis-form');
+        const urlInput = document.getElementById('url');
+        const fileInput = document.getElementById('file');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const analyzeBtn = document.getElementById('analyze-btn');
+
+        // File upload interactions
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('drag-over');
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileDisplay(files[0]);
             }
         });
-        
-        // Test form submission function
-        function testFormSubmission() {
-            const urlInput = document.querySelector('input[name="url"]');
-            const fileInput = document.getElementById('file-input');
-            const form = document.querySelector('form');
-            
-            console.log('=== FORM TEST ===');
-            console.log('URL Input:', urlInput ? urlInput.value : 'Not found');
-            console.log('File Input:', fileInput ? (fileInput.files[0] ? fileInput.files[0].name : 'No file') : 'Not found');
-            console.log('Form:', form ? 'Found' : 'Not found');
-            console.log('Form action:', form ? form.action : 'N/A');
-            console.log('Form method:', form ? form.method : 'N/A');
-            console.log('Form enctype:', form ? form.enctype : 'N/A');
-            
-            // Test form validation
-            if (form) {
-                const isValid = form.checkValidity();
-                console.log('Form valid:', isValid);
-                
-                if (!isValid) {
-                    form.reportValidity();
-                }
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                updateFileDisplay(e.target.files[0]);
+                urlInput.value = ''; // Clear URL if file selected
             }
-            
-            // Test HTMX
-            if (typeof htmx !== 'undefined') {
-                console.log('HTMX available, testing...');
-                const htmxForm = document.querySelector('[hx-post]');
-                console.log('HTMX form found:', !!htmxForm);
+        });
+
+        urlInput.addEventListener('input', () => {
+            if (urlInput.value) {
+                fileInput.value = ''; // Clear file if URL entered
+                resetFileDisplay();
             }
-            
-            alert('Check browser console for form test results');
+        });
+
+        function updateFileDisplay(file) {
+            fileUploadArea.innerHTML = `
+                <i class="fas fa-check-circle" style="color: var(--success); font-size: 3rem;"></i>
+                <div class="upload-text">${file.name}</div>
+                <div class="upload-subtext">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+            `;
         }
-        
-        // Fallback form submission if HTMX fails
-        function setupFormFallback() {
-            const form = document.querySelector('form');
-            if (!form) return;
-            
-            // Remove HTMX attributes to use traditional submission
-            form.removeAttribute('hx-post');
-            form.removeAttribute('hx-target');
-            form.removeAttribute('hx-swap');
-            form.removeAttribute('hx-indicator');
-            
-            // Add traditional form handling
-            form.addEventListener('submit', function(e) {
+
+        function resetFileDisplay() {
+            fileUploadArea.innerHTML = `
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div class="upload-text">Click to upload or drag & drop</div>
+                <div class="upload-subtext">PNG, JPEG, WebP • Max 10MB</div>
+            `;
+        }
+
+        // Form submission
+        form.addEventListener('submit', (e) => {
+            const hasUrl = urlInput.value.trim() !== '';
+            const hasFile = fileInput.files.length > 0;
+
+            if (!hasUrl && !hasFile) {
                 e.preventDefault();
-                
-                const formData = new FormData(form);
-                const url = formData.get('url');
-                const file = formData.get('file');
-                
-                if (!url && !file) {
-                    alert('Please provide either a URL or upload an image file.');
+                alert('Please enter a URL or upload an image file.');
+                return;
+            }
+
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
+            document.body.classList.add('loading');
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) {
+                    clearInterval(progressInterval);
                     return;
                 }
                 
-                // Show loading state
-                const loading = document.getElementById('loading');
-                if (loading) loading.classList.remove('htmx-indicator');
-                
-                // Submit form traditionally
-                form.submit();
-            });
-            
-            console.log('Form fallback mode activated - using traditional submission');
+                if (progress < 30) {
+                    analyzeBtn.innerHTML = '<span class="spinner"></span> Capturing screenshot...';
+                } else if (progress < 70) {
+                    analyzeBtn.innerHTML = '<span class="spinner"></span> Running AI analysis...';
+                } else {
+                    analyzeBtn.innerHTML = '<span class="spinner"></span> Generating insights...';
+                }
+            }, 1000);
+        });
+
+        // Handle form response
+        if (window.location.hash === '#analyzed') {
+            document.body.classList.remove('loading');
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Analyze with AI</span>';
         }
-        
-        // Check if HTMX loaded successfully, if not use fallback
-        setTimeout(function() {
-            if (typeof htmx === 'undefined') {
-                console.warn('HTMX not available, using form fallback');
-                setupFormFallback();
-            }
-        }, 2000);
     </script>
 </body>
 </html>
