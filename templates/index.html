@@ -87,7 +87,7 @@
                     <h3><i class="fas fa-upload"></i> Upload Screenshot</h3>
                     <div class="form-group">
                         <div class="file-upload-area" id="file-upload-area">
-                            <input type="file" id="file" name="file" accept="image/*" style="display: none;">
+                            <input type="file" id="file" name="file" accept="image/*">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <div class="upload-text">Click to upload or drag & drop</div>
                             <div class="upload-subtext">PNG, JPEG, WebP • Max 10MB</div>
@@ -110,7 +110,7 @@
     </div>
 
     <script>
-        // Form handling
+        // Form handling with better validation
         const form = document.getElementById('analysis-form');
         const urlInput = document.getElementById('url');
         const fileInput = document.getElementById('file');
@@ -136,6 +136,7 @@
             if (files.length > 0) {
                 fileInput.files = files;
                 updateFileDisplay(files[0]);
+                urlInput.value = ''; // Clear URL if file selected
             }
         });
 
@@ -163,19 +164,28 @@
 
         function resetFileDisplay() {
             fileUploadArea.innerHTML = `
+                <input type="file" id="file" name="file" accept="image/*">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <div class="upload-text">Click to upload or drag & drop</div>
                 <div class="upload-subtext">PNG, JPEG, WebP • Max 10MB</div>
             `;
+            // Re-add event listener to new file input
+            document.getElementById('file').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    updateFileDisplay(e.target.files[0]);
+                    urlInput.value = '';
+                }
+            });
         }
 
-        // Form submission
-        form.addEventListener('submit', (e) => {
+        // Form submission with better error handling
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
             const hasUrl = urlInput.value.trim() !== '';
-            const hasFile = fileInput.files.length > 0;
+            const hasFile = fileInput.files && fileInput.files.length > 0;
 
             if (!hasUrl && !hasFile) {
-                e.preventDefault();
                 alert('Please enter a URL or upload an image file.');
                 return;
             }
@@ -185,31 +195,103 @@
             analyzeBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
             document.body.classList.add('loading');
 
-            // Simulate progress
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 10;
-                if (progress > 90) {
-                    clearInterval(progressInterval);
-                    return;
+            try {
+                // Create FormData properly
+                const formData = new FormData();
+                
+                if (hasUrl) {
+                    formData.append('url', urlInput.value.trim());
                 }
                 
-                if (progress < 30) {
-                    analyzeBtn.innerHTML = '<span class="spinner"></span> Capturing screenshot...';
-                } else if (progress < 70) {
-                    analyzeBtn.innerHTML = '<span class="spinner"></span> Running AI analysis...';
-                } else {
-                    analyzeBtn.innerHTML = '<span class="spinner"></span> Generating insights...';
+                if (hasFile) {
+                    formData.append('file', fileInput.files[0]);
                 }
-            }, 1000);
+                
+                // Debug log
+                console.log('Submitting form with:');
+                console.log('URL:', formData.get('url'));
+                console.log('File:', formData.get('file'));
+                if (formData.get('file')) {
+                    console.log('File name:', formData.get('file').name);
+                    console.log('File size:', formData.get('file').size);
+                }
+                
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    // Check if response is actually HTML (not JSON error)
+                    if (html.includes('results-layout') || html.includes('error-message')) {
+                        document.getElementById('results').innerHTML = html;
+                        
+                        // Scroll to results
+                        setTimeout(() => {
+                            document.getElementById('results').scrollIntoView({ 
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    } else {
+                        // Might be JSON error response
+                        try {
+                            const errorData = JSON.parse(html);
+                            document.getElementById('results').innerHTML = 
+                                `<div class="error-message">❌ ${errorData.error || 'Analysis failed'}</div>`;
+                        } catch {
+                            document.getElementById('results').innerHTML = 
+                                '<div class="error-message">❌ Unexpected response format</div>';
+                        }
+                    }
+                } else {
+                    // Try to parse error response
+                    try {
+                        const errorText = await response.text();
+                        if (errorText.includes('error-message')) {
+                            document.getElementById('results').innerHTML = errorText;
+                        } else {
+                            const error = JSON.parse(errorText);
+                            document.getElementById('results').innerHTML = 
+                                `<div class="error-message">❌ ${error.error || 'Analysis failed'}</div>`;
+                        }
+                    } catch {
+                        document.getElementById('results').innerHTML = 
+                            '<div class="error-message">❌ Analysis failed. Please try again.</div>';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                document.getElementById('results').innerHTML = 
+                    '<div class="error-message">❌ Network error. Please try again.</div>';
+            } finally {
+                // Reset loading state
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Analyze with AI</span>';
+                document.body.classList.remove('loading');
+            }
         });
 
-        // Handle form response
-        if (window.location.hash === '#analyzed') {
-            document.body.classList.remove('loading');
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Analyze with AI</span>';
-        }
+        // Add CSS for drag and drop
+        const style = document.createElement('style');
+        style.textContent = `
+            .drag-over {
+                border-color: var(--primary) !important;
+                background: rgba(102, 126, 234, 0.05) !important;
+                transform: translateY(-2px);
+            }
+            .file-upload-area input[type="file"] {
+                position: absolute;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

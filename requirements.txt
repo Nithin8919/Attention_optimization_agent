@@ -12,8 +12,8 @@ scipy==1.11.4
 # HTTP Requests
 requests==2.31.0
 
-# OpenAI Integration
-openai==1.3.5
+# OpenAI Integration - FIXED VERSION
+openai==1.50.2
 
 # Web Automation (Optional - for URL screenshots)
 playwright==1.40.0
